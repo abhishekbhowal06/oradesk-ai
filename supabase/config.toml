@@ -1,0 +1,25 @@
+project_id = "tcgxsozyohzxcbxjrrxc"
+
+[functions.twilio-call]
+verify_jwt = false
+
+[functions.twilio-twiml]
+verify_jwt = false
+
+[functions.twilio-gather]
+verify_jwt = false
+
+[functions.process-followups]
+verify_jwt = false
+
+[functions.send-notification]
+verify_jwt = false
+
+[functions.twilio-inbound]
+verify_jwt = false
+
+[functions.twilio-inbound-gather]
+verify_jwt = false
+
+[functions.elevenlabs-conversation-token]
+verify_jwt = false
