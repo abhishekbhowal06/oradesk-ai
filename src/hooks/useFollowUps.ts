@@ -58,7 +58,8 @@ export function useFollowUps(options?: { status?: FollowUpStatus }) {
 
       let queryBuilder = supabase
         .from('follow_up_schedules')
-        .select(`
+        .select(
+          `
           *,
           patient:patients (
             id,
@@ -72,7 +73,8 @@ export function useFollowUps(options?: { status?: FollowUpStatus }) {
             procedure_name,
             status
           )
-        `)
+        `,
+        )
         .eq('clinic_id', currentClinic.id)
         .order('scheduled_for', { ascending: true });
 
@@ -110,27 +112,38 @@ export function useFollowUps(options?: { status?: FollowUpStatus }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['follow_up_schedules', currentClinic?.id] });
-      toast({ title: 'Follow-up scheduled', description: 'The follow-up has been added to the queue.' });
+      toast({
+        title: 'Follow-up scheduled',
+        description: 'The follow-up has been added to the queue.',
+      });
     },
     onError: (error) => {
       console.error('Error creating follow-up:', error);
-      toast({ title: 'Error', description: 'Failed to schedule follow-up.', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Failed to schedule follow-up.',
+        variant: 'destructive',
+      });
     },
   });
 
   // Update follow-up status
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status, failure_reason }: { 
-      id: string; 
+    mutationFn: async ({
+      id,
+      status,
+      failure_reason,
+    }: {
+      id: string;
       status: FollowUpStatus;
       failure_reason?: string;
     }) => {
       const updates: Partial<FollowUpSchedule> = { status };
-      
+
       if (status === 'completed') {
         updates.completed_at = new Date().toISOString();
       }
-      
+
       if (failure_reason) {
         updates.failure_reason = failure_reason;
       }
@@ -189,17 +202,17 @@ export function useFollowUps(options?: { status?: FollowUpStatus }) {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['follow_up_schedules', currentClinic?.id] });
-      
+
       if (data.status === 'exhausted') {
-        toast({ 
-          title: 'Follow-up attempts exhausted', 
+        toast({
+          title: 'Follow-up attempts exhausted',
           description: 'Maximum attempts reached. Manual intervention required.',
           variant: 'destructive',
         });
       } else {
-        toast({ 
-          title: 'Attempt recorded', 
-          description: `Next attempt scheduled for ${new Date(data.next_attempt_at!).toLocaleString()}.` 
+        toast({
+          title: 'Attempt recorded',
+          description: `Next attempt scheduled for ${new Date(data.next_attempt_at!).toLocaleString()}.`,
         });
       }
     },
@@ -266,10 +279,10 @@ export function useFollowUpStats() {
       if (error) throw error;
 
       const followUps = data || [];
-      const pending = followUps.filter(f => f.status === 'pending').length;
-      const inProgress = followUps.filter(f => f.status === 'in_progress').length;
-      const completed = followUps.filter(f => f.status === 'completed').length;
-      const exhausted = followUps.filter(f => f.status === 'exhausted').length;
+      const pending = followUps.filter((f) => f.status === 'pending').length;
+      const inProgress = followUps.filter((f) => f.status === 'in_progress').length;
+      const completed = followUps.filter((f) => f.status === 'completed').length;
+      const exhausted = followUps.filter((f) => f.status === 'exhausted').length;
 
       return {
         pending,
@@ -277,9 +290,7 @@ export function useFollowUpStats() {
         completed,
         exhausted,
         total: followUps.length,
-        successRate: followUps.length > 0 
-          ? Math.round((completed / followUps.length) * 100) 
-          : 0,
+        successRate: followUps.length > 0 ? Math.round((completed / followUps.length) * 100) : 0,
       };
     },
     enabled: !!currentClinic,

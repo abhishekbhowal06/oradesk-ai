@@ -21,7 +21,10 @@ export interface Patient {
 export type CreatePatientInput = Omit<Patient, 'id' | 'clinic_id' | 'created_at' | 'updated_at'>;
 export type UpdatePatientInput = Partial<CreatePatientInput>;
 
-export function usePatients() {
+export function usePatients(options?: {
+  search?: string;
+  status?: 'active' | 'inactive' | 'unreachable' | 'all';
+}) {
   const { currentClinic } = useClinic();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -31,11 +34,20 @@ export function usePatients() {
     queryFn: async () => {
       if (!currentClinic) return [];
 
-      const { data, error } = await supabase
+      let queryBuilder = supabase
         .from('patients')
         .select('*')
-        .eq('clinic_id', currentClinic.id)
-        .order('last_name', { ascending: true });
+        .eq('clinic_id', currentClinic.id);
+
+      if (options?.status && options.status !== 'all') {
+        queryBuilder = queryBuilder.eq('status', options.status);
+      }
+
+      if (options?.search) {
+        queryBuilder = queryBuilder.or(`first_name.ilike.%${options.search}%,last_name.ilike.%${options.search}%,phone.ilike.%${options.search}%`);
+      }
+
+      const { data, error } = await queryBuilder.order('last_name', { ascending: true });
 
       if (error) throw error;
       return data as Patient[];

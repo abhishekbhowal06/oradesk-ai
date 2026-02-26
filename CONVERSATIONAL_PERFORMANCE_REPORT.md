@@ -58,11 +58,11 @@ Gemini API (3-5s) → Safety checks (50ms) → TTS (1-2s) → Playback
 
 Play acknowledgement sounds while processing:
 
-| Situation | Backchannel | Timing |
-|-----------|-------------|--------|
-| Patient speaking (partial) | "mm-hmm", "okay" | <200ms |
-| Thinking/processing | "let me check", "one moment" | <300ms |
-| Clarification needed | "sorry?", "could you repeat?" | <200ms |
+| Situation                  | Backchannel                   | Timing |
+| -------------------------- | ----------------------------- | ------ |
+| Patient speaking (partial) | "mm-hmm", "okay"              | <200ms |
+| Thinking/processing        | "let me check", "one moment"  | <300ms |
+| Clarification needed       | "sorry?", "could you repeat?" | <200ms |
 
 ### 2. Turn-Taking Delays
 
@@ -90,42 +90,42 @@ onPatientInterrupt() {
 
 ### Backend (`services/ai-calling/src/lib/`)
 
-| File | Purpose |
-|------|---------|
-| `realtime-conversation.ts` | Early exit patterns, backchannel engine, turn-taking logic |
-| `stream-handler.ts` | Deepgram Live STT integration, bidirectional audio streaming |
+| File                       | Purpose                                                      |
+| -------------------------- | ------------------------------------------------------------ |
+| `realtime-conversation.ts` | Early exit patterns, backchannel engine, turn-taking logic   |
+| `stream-handler.ts`        | Deepgram Live STT integration, bidirectional audio streaming |
 
 ### Testing
 
-| File | Purpose |
-|------|---------|
+| File                                      | Purpose                                       |
+| ----------------------------------------- | --------------------------------------------- |
 | `__tests__/realtime-conversation.test.ts` | Latency validation, conversation flow testing |
 
 ---
 
 ## Implementation Status
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Early exit patterns | ✅ Complete | 0-50ms pattern matching |
-| Backchannel engine | ✅ Complete | Behavioral masking |
-| Turn-taking timing | ✅ Complete | Perceptual naturalness |
-| Streaming state machine | ✅ Complete | Interrupt handling |
-| Deepgram integration | 🟡 Scaffolded | Needs API key + testing |
-| Streaming TTS | ⚠️ Pending | ElevenLabs or Azure |
-| Webhook update | ⚠️ Pending | Switch from Gather to Media Streams |
+| Component               | Status        | Notes                               |
+| ----------------------- | ------------- | ----------------------------------- |
+| Early exit patterns     | ✅ Complete   | 0-50ms pattern matching             |
+| Backchannel engine      | ✅ Complete   | Behavioral masking                  |
+| Turn-taking timing      | ✅ Complete   | Perceptual naturalness              |
+| Streaming state machine | ✅ Complete   | Interrupt handling                  |
+| Deepgram integration    | 🟡 Scaffolded | Needs API key + testing             |
+| Streaming TTS           | ⚠️ Pending    | ElevenLabs or Azure                 |
+| Webhook update          | ⚠️ Pending    | Switch from Gather to Media Streams |
 
 ---
 
 ## Performance Targets
 
-| Metric | Target | How Measured |
-|--------|--------|--------------|
-| Time to first audio | <300ms | 95th percentile |
-| Turn gap (natural) | 200-400ms | Median |
-| Interrupt reaction | <200ms | 99th percentile |
-| Early exit accuracy | >90% | Pattern match precision |
-| Conversation drop rate | <1% | Per 1000 calls |
+| Metric                 | Target    | How Measured            |
+| ---------------------- | --------- | ----------------------- |
+| Time to first audio    | <300ms    | 95th percentile         |
+| Turn gap (natural)     | 200-400ms | Median                  |
+| Interrupt reaction     | <200ms    | 99th percentile         |
+| Early exit accuracy    | >90%      | Pattern match precision |
+| Conversation drop rate | <1%       | Per 1000 calls          |
 
 ---
 
@@ -152,6 +152,7 @@ Patient stops speaking: T+0ms
 ├─ Response ready: T+3500ms
 └─ TTS streaming: T+4000ms
 ```
+
 **Human perception:** System acknowledged in 200ms, so feels responsive even though full answer took 4s.
 
 ---
@@ -169,12 +170,12 @@ Patient stops speaking: T+0ms
 
 ## Risk Mitigation
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Streaming STT increases costs | Medium | Use VAD, only stream during speech |
-| Wrong early exits | High | Log all; A/B test confidence |
-| Network instability | Medium | Adaptive bitrate, fallback to Gather |
-| Complexity | Medium | Monitoring + auto-fallback |
+| Risk                          | Impact | Mitigation                           |
+| ----------------------------- | ------ | ------------------------------------ |
+| Streaming STT increases costs | Medium | Use VAD, only stream during speech   |
+| Wrong early exits             | High   | Log all; A/B test confidence         |
+| Network instability           | Medium | Adaptive bitrate, fallback to Gather |
+| Complexity                    | Medium | Monitoring + auto-fallback           |
 
 ---
 
@@ -186,7 +187,7 @@ The system is successful when:
 ✅ System never silent >2 seconds without acknowledgement  
 ✅ Patients can interrupt naturally  
 ✅ Conversations feel "immediate" in user surveys (>8/10)  
-✅ No increase in escalation rate vs. current system  
+✅ No increase in escalation rate vs. current system
 
 ---
 

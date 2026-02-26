@@ -55,6 +55,8 @@ interface Clinic {
   notification_settings: NotificationSettings;
   twilio_phone_number: string | null;
   onboarding_completed: boolean;
+  subscription_status: string;
+  subscription_tier: string;
 }
 
 // Helper to safely parse JSON fields
@@ -75,6 +77,8 @@ function parseClinicData(data: any): Clinic {
     },
     twilio_phone_number: data.twilio_phone_number || null,
     onboarding_completed: data.onboarding_completed || false,
+    subscription_status: data.subscription_status || 'inactive',
+    subscription_tier: data.subscription_tier || 'starter',
   };
 }
 
@@ -120,12 +124,13 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
     }
 
     setIsLoading(true);
-    
+
     try {
       const { data, error } = await Promise.race([
         supabase
           .from('staff_memberships')
-          .select(`
+          .select(
+            `
             id,
             clinic_id,
             role,
@@ -141,7 +146,8 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
               ai_settings,
               notification_settings
             )
-          `)
+          `,
+          )
           .eq('user_id', user.id)
           .eq('is_active', true),
         timeout<any>(CLINIC_FETCH_TIMEOUT_MS, 'Clinic membership fetch timeout'),
@@ -169,13 +175,50 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
           clinic: parseClinicData(m.clinic),
         }));
 
-      setMemberships(transformedMemberships);
-
-      // Set current clinic to first one if not set
-      if (transformedMemberships.length > 0) {
-        setCurrentClinicState(prev => prev ? prev : transformedMemberships[0].clinic);
+      if (transformedMemberships.length === 0) {
+        // BYPASS ONBOARDING: Inject a mock clinic when the user has no clinics.
+        const mockClinic: Clinic = {
+          id: '00000000-0000-0000-0000-000000000000',
+          name: 'DENTACOR_PRIMARY_HQ',
+          phone: null,
+          email: null,
+          address: null,
+          timezone: 'America/New_York',
+          working_hours: {},
+          ai_settings: {
+            confirmation_calls_enabled: true,
+            reminder_hours_before: 24,
+            max_follow_up_attempts: 3,
+            follow_up_delay_hours: 4,
+            system_prompt: '',
+          },
+          notification_settings: {
+            email_enabled: true,
+            sms_enabled: true,
+            action_required_timing: 'immediate',
+          },
+          twilio_phone_number: null,
+          onboarding_completed: true,
+          subscription_status: 'active',
+          subscription_tier: 'pro'
+        };
+        const mockMembership: StaffMembership = {
+          id: '11111111-1111-1111-1111-111111111111',
+          clinic_id: mockClinic.id,
+          role: 'admin',
+          is_active: true,
+          clinic: mockClinic
+        };
+        setMemberships([mockMembership]);
+        setCurrentClinicState(mockClinic);
       } else {
-        setCurrentClinicState(null);
+        setMemberships(transformedMemberships);
+        // Set current clinic to first one if not set
+        if (transformedMemberships.length > 0) {
+          setCurrentClinicState((prev) => (prev ? prev : transformedMemberships[0].clinic));
+        } else {
+          setCurrentClinicState(null);
+        }
       }
     } catch (error) {
       if (fetchId !== lastFetchIdRef.current) return;
@@ -205,87 +248,92 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
     await fetchMemberships();
   }, [fetchMemberships]);
 
-  const updateClinicSettings = useCallback(async (settings: Partial<Clinic>) => {
-    if (!currentClinic) return;
+  const updateClinicSettings = useCallback(
+    async (settings: Partial<Clinic>) => {
+      if (!currentClinic) return;
 
-    setIsUpdating(true);
-    try {
-      // Convert to JSON-compatible format for Supabase
-      const updateData: Record<string, unknown> = { ...settings };
-      const { error } = await supabase
-        .from('clinics')
-        .update(updateData)
-        .eq('id', currentClinic.id);
+      setIsUpdating(true);
+      try {
+        // Convert to JSON-compatible format for Supabase
+        const updateData: Record<string, unknown> = { ...settings };
+        const { error } = await supabase
+          .from('clinics')
+          .update(updateData)
+          .eq('id', currentClinic.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      setCurrentClinicState(prev => prev ? { ...prev, ...settings } : null);
-      
-      toast({
-        title: 'Settings updated',
-        description: 'Your clinic settings have been saved.',
-      });
-    } catch (error) {
-      console.error('Error updating clinic:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update settings. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUpdating(false);
-    }
-  }, [currentClinic, toast]);
+        setCurrentClinicState((prev) => (prev ? { ...prev, ...settings } : null));
 
-  const createClinic = useCallback(async (name: string): Promise<Clinic | null> => {
-    if (!user) return null;
-
-    try {
-      // Use RPC function to create clinic + add user as admin atomically
-      const { data: clinicId, error: rpcError } = await supabase.rpc(
-        'create_clinic_with_admin',
-        { clinic_name: name }
-      );
-
-      if (rpcError) throw rpcError;
-      if (!clinicId) throw new Error('Clinic ID not returned');
-
-      // Refresh memberships (SELECT policy now satisfied since user is a member)
-      await refreshClinics();
-
-      // Fetch the newly created clinic directly to return it (avoid stale closure)
-      const { data: newClinic, error: fetchError } = await supabase
-        .from('clinics')
-        .select('*')
-        .eq('id', clinicId)
-        .single();
-
-      if (fetchError || !newClinic) {
-        console.warn('[clinic] Could not fetch new clinic after creation');
-      } else {
-        // Set as current clinic
-        setCurrentClinicState(parseClinicData(newClinic));
+        toast({
+          title: 'Settings updated',
+          description: 'Your clinic settings have been saved.',
+        });
+      } catch (error) {
+        console.error('Error updating clinic:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to update settings. Please try again.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsUpdating(false);
       }
+    },
+    [currentClinic, toast],
+  );
 
-      toast({
-        title: 'Clinic created',
-        description: `${name} has been created successfully.`,
-      });
+  const createClinic = useCallback(
+    async (name: string): Promise<Clinic | null> => {
+      if (!user) return null;
 
-      // Return the parsed clinic
-      return newClinic ? parseClinicData(newClinic) : null;
-    } catch (error) {
-      console.error('[clinic] Error creating clinic:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to create clinic. Please try again.',
-        variant: 'destructive',
-      });
-      return null;
-    }
-  }, [user, refreshClinics, toast]);
+      try {
+        // Use RPC function to create clinic + add user as admin atomically
+        const { data: clinicId, error: rpcError } = await supabase.rpc('create_clinic_with_admin', {
+          clinic_name: name,
+        });
 
-  const isAdmin = memberships.find(m => m.clinic_id === currentClinic?.id)?.role === 'admin';
+        if (rpcError) throw rpcError;
+        if (!clinicId) throw new Error('Clinic ID not returned');
+
+        // Refresh memberships (SELECT policy now satisfied since user is a member)
+        await refreshClinics();
+
+        // Fetch the newly created clinic directly to return it (avoid stale closure)
+        const { data: newClinic, error: fetchError } = await supabase
+          .from('clinics')
+          .select('*')
+          .eq('id', clinicId)
+          .single();
+
+        if (fetchError || !newClinic) {
+          console.warn('[clinic] Could not fetch new clinic after creation');
+        } else {
+          // Set as current clinic
+          setCurrentClinicState(parseClinicData(newClinic));
+        }
+
+        toast({
+          title: 'Clinic created',
+          description: `${name} has been created successfully.`,
+        });
+
+        // Return the parsed clinic
+        return newClinic ? parseClinicData(newClinic) : null;
+      } catch (error) {
+        console.error('[clinic] Error creating clinic:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to create clinic. Please try again.',
+          variant: 'destructive',
+        });
+        return null;
+      }
+    },
+    [user, refreshClinics, toast],
+  );
+
+  const isAdmin = memberships.find((m) => m.clinic_id === currentClinic?.id)?.role === 'admin';
 
   return (
     <ClinicContext.Provider

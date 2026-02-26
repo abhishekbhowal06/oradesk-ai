@@ -1,10 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useClinic } from '@/contexts/ClinicContext';
 import { useToast } from '@/hooks/use-toast';
 
-export type CallStatus = 'queued' | 'calling' | 'answered' | 'voicemail' | 'no_answer' | 'failed' | 'completed';
-export type CallOutcome = 'confirmed' | 'rescheduled' | 'cancelled' | 'action_needed' | 'unreachable';
+export type CallStatus =
+  | 'queued'
+  | 'calling'
+  | 'answered'
+  | 'voicemail'
+  | 'no_answer'
+  | 'failed'
+  | 'completed';
+export type CallOutcome =
+  | 'confirmed'
+  | 'rescheduled'
+  | 'cancelled'
+  | 'action_needed'
+  | 'unreachable';
 
 export interface TranscriptMessage {
   role: 'ai' | 'patient';
@@ -50,7 +63,11 @@ export interface AICall {
   };
 }
 
-export function useAICalls(options?: { status?: CallStatus; outcome?: CallOutcome; limit?: number }) {
+export function useAICalls(options?: {
+  status?: CallStatus;
+  outcome?: CallOutcome;
+  limit?: number;
+}) {
   const { currentClinic } = useClinic();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -62,7 +79,8 @@ export function useAICalls(options?: { status?: CallStatus; outcome?: CallOutcom
 
       let queryBuilder = supabase
         .from('ai_calls')
-        .select(`
+        .select(
+          `
           *,
           patient:patients (
             id,
@@ -75,7 +93,8 @@ export function useAICalls(options?: { status?: CallStatus; outcome?: CallOutcom
             scheduled_at,
             procedure_name
           )
-        `)
+        `,
+        )
         .eq('clinic_id', currentClinic.id)
         .order('created_at', { ascending: false });
 
@@ -103,9 +122,40 @@ export function useAICalls(options?: { status?: CallStatus; outcome?: CallOutcom
     enabled: !!currentClinic,
   });
 
+  // ── Real-Time: auto-refresh when ai_calls rows change ──
+  useEffect(() => {
+    if (!currentClinic?.id) return;
+
+    const channel = supabase
+      .channel('ai-calls-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'ai_calls',
+          filter: `clinic_id=eq.${currentClinic.id}`,
+        },
+        () => {
+          // Invalidate + refetch when any call row changes
+          queryClient.invalidateQueries({ queryKey: ['ai_calls', currentClinic.id] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentClinic?.id, queryClient]);
+
   // Convert an AI call escalation to a staff task
   const createTaskFromCallMutation = useMutation({
-    mutationFn: async ({ callId, title, description, priority }: {
+    mutationFn: async ({
+      callId,
+      title,
+      description,
+      priority,
+    }: {
       callId: string;
       title: string;
       description: string;
@@ -143,7 +193,10 @@ export function useAICalls(options?: { status?: CallStatus; outcome?: CallOutcom
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ai_calls', currentClinic?.id] });
       queryClient.invalidateQueries({ queryKey: ['staff_tasks', currentClinic?.id] });
-      toast({ title: 'Task created', description: 'A staff task has been created from this call.' });
+      toast({
+        title: 'Task created',
+        description: 'A staff task has been created from this call.',
+      });
     },
     onError: (error) => {
       console.error('Error creating task:', error);
@@ -153,7 +206,10 @@ export function useAICalls(options?: { status?: CallStatus; outcome?: CallOutcom
 
   // Update call outcome/status
   const updateCallMutation = useMutation({
-    mutationFn: async ({ callId, updates }: {
+    mutationFn: async ({
+      callId,
+      updates,
+    }: {
       callId: string;
       updates: {
         status?: CallStatus;
@@ -204,7 +260,8 @@ export function useRecentCalls(limit: number = 5) {
 
       const { data, error } = await supabase
         .from('ai_calls')
-        .select(`
+        .select(
+          `
           *,
           patient:patients (
             id,
@@ -212,7 +269,8 @@ export function useRecentCalls(limit: number = 5) {
             last_name,
             phone
           )
-        `)
+        `,
+        )
         .eq('clinic_id', currentClinic.id)
         .order('created_at', { ascending: false })
         .limit(limit);
@@ -237,7 +295,8 @@ export function useEscalatedCalls() {
 
       const { data, error } = await supabase
         .from('ai_calls')
-        .select(`
+        .select(
+          `
           *,
           patient:patients (
             id,
@@ -250,7 +309,8 @@ export function useEscalatedCalls() {
             scheduled_at,
             procedure_name
           )
-        `)
+        `,
+        )
         .eq('clinic_id', currentClinic.id)
         .eq('escalation_required', true)
         .eq('outcome', 'action_needed')
@@ -288,12 +348,13 @@ export function useCallStats() {
 
       const calls = data || [];
       const totalCalls = calls.length;
-      const confirmedCalls = calls.filter(c => c.outcome === 'confirmed').length;
+      const confirmedCalls = calls.filter((c) => c.outcome === 'confirmed').length;
       const revenueSaved = calls.reduce((sum, c) => sum + (Number(c.revenue_impact) || 0), 0);
-      const avgDuration = calls.length > 0 
-        ? calls.reduce((sum, c) => sum + (c.duration_seconds || 0), 0) / calls.length 
-        : 0;
-      const escalatedCalls = calls.filter(c => c.outcome === 'action_needed').length;
+      const avgDuration =
+        calls.length > 0
+          ? calls.reduce((sum, c) => sum + (c.duration_seconds || 0), 0) / calls.length
+          : 0;
+      const escalatedCalls = calls.filter((c) => c.outcome === 'action_needed').length;
 
       return {
         totalCalls,

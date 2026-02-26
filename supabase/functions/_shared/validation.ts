@@ -4,7 +4,8 @@ import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 const uuidSchema = z.string().uuid('Invalid UUID format');
 
 // E.164 phone number format validation
-const phoneSchema = z.string()
+const phoneSchema = z
+  .string()
   .min(10, 'Phone number too short')
   .max(15, 'Phone number too long')
   .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format (expected E.164)');
@@ -13,7 +14,8 @@ const phoneSchema = z.string()
 const emailSchema = z.string().email('Invalid email format').max(255, 'Email too long');
 
 // Text message content validation
-const messageSchema = z.string()
+const messageSchema = z
+  .string()
   .min(1, 'Message cannot be empty')
   .max(1600, 'Message too long (max 1600 characters)');
 
@@ -26,12 +28,18 @@ export const CallRequestSchema = z.object({
   appointmentId: uuidSchema.optional(),
   callType: z.enum(['confirmation', 'reminder', 'follow_up']).optional(),
   callSid: z.string().optional(),
-  outcome: z.enum(['confirmed', 'rescheduled', 'cancelled', 'action_needed', 'unreachable']).optional(),
-  transcript: z.array(z.object({
-    role: z.string(),
-    message: z.string(),
-    timestamp: z.string(),
-  })).optional(),
+  outcome: z
+    .enum(['confirmed', 'rescheduled', 'cancelled', 'action_needed', 'unreachable'])
+    .optional(),
+  transcript: z
+    .array(
+      z.object({
+        role: z.string(),
+        message: z.string(),
+        timestamp: z.string(),
+      }),
+    )
+    .optional(),
   confidenceScore: z.number().min(0).max(100).optional(),
   aiReasoning: z.string().max(500).optional(),
 });
@@ -56,7 +64,7 @@ export const NotificationRequestSchema = z.object({
 
 export type ValidatedNotificationRequest = z.infer<typeof NotificationRequestSchema>;
 
-// ElevenLabs token request schema  
+// ElevenLabs token request schema
 export const ElevenLabsTokenRequestSchema = z.object({
   clinicId: uuidSchema,
 });
@@ -69,7 +77,7 @@ export type ValidatedElevenLabsRequest = z.infer<typeof ElevenLabsTokenRequestSc
 export function validateInput<T>(schema: z.ZodSchema<T>, data: unknown): T {
   const result = schema.safeParse(data);
   if (!result.success) {
-    const errors = result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+    const errors = result.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ');
     throw new Error(`Validation failed: ${errors}`);
   }
   return result.data;

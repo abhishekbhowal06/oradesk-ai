@@ -19,32 +19,41 @@ Server will run on port 8080 with WebSocket streaming at `/v1/streams`.
 ## 2. Run Verification Scripts
 
 ### Phase 1: Audio Pipeline
+
 ```bash
 node src/__manual-tests__/phase1-verify.js
 ```
+
 **Expected:** Server responding, WebSocket path configured
 
 ### Phase 2: Early Intent Engine
+
 ```bash
 node src/__manual-tests__/phase2-verify.js
 ```
+
 **Expected:** Pattern matching in <1ms, 99.9% reduction vs Gemini
 
 ### Phase 3: Streaming TTS
+
 ```bash
 node src/__manual-tests__/phase3-verify.js
 ```
+
 **Expected:** Architecture for chunked delivery confirmed
 
 ### Final Verification
+
 ```bash
 node src/__manual-tests__/final-verification.js
 ```
+
 **Expected:** All phases complete, targets met
 
 ## 3. Test with Twilio (Production)
 
 ### Configure Twilio Webhook:
+
 1. Go to Twilio Console → Phone Numbers
 2. Select your number
 3. Under "Voice & Fax", set:
@@ -53,6 +62,7 @@ node src/__manual-tests__/final-verification.js
    - **HTTP Method:** POST
 
 ### Make a Test Call:
+
 ```bash
 # Call your Twilio number
 # Say "yes" to test early exit
@@ -60,6 +70,7 @@ node src/__manual-tests__/final-verification.js
 ```
 
 ### Monitor Server Logs:
+
 ```bash
 # Watch for latency reports:
 # ============================================================
@@ -79,31 +90,39 @@ node src/__manual-tests__/final-verification.js
 ## 4. Verify Key Behaviors
 
 ### Test 1: Simple Confirmation
+
 **Action:** Call and say "yes"
 **Expected:**
+
 - Response in ~250ms
 - No backchannel (fast enough)
 - Natural turn gap
 - Immediate TTS playback
 
 ### Test 2: Complex Question
+
 **Action:** Ask "What time is my appointment and can I reschedule?"
 **Expected:**
+
 - Backchannel "Let me check that" at ~250ms
 - Full Gemini analysis in background
 - Detailed response
 - Total perceived <500ms
 
 ### Test 3: Interrupt
+
 **Action:** Start talking while AI is responding
 **Expected:**
+
 - AI stops mid-sentence immediately
 - Switches to listening mode
 - No audio overlap
 
 ### Test 4: Silence
+
 **Action:** Make call and stay silent for 2+ seconds
 **Expected:**
+
 - No silence >800ms
 - Periodic acknowledgements
 - Natural prompting
@@ -111,12 +130,14 @@ node src/__manual-tests__/final-verification.js
 ## 5. Latency Measurement
 
 ### View Real-Time Metrics:
+
 ```bash
 # Server logs will show per-call reports
 tail -f logs/ai-calling.log | grep "LATENCY REPORT"
 ```
 
 ### Key Metrics to Watch:
+
 - **STT First Word:** Should be <150ms
 - **Intent Prediction:** Should be <50ms (usually <1ms for early exits)
 - **TTS First Chunk:** Should be <200ms
@@ -125,6 +146,7 @@ tail -f logs/ai-calling.log | grep "LATENCY REPORT"
 ## 6. Troubleshooting
 
 ### Server won't start:
+
 ```bash
 # Check dependencies
 npm install
@@ -137,6 +159,7 @@ cat .env | grep -E "(DEEPGRAM|ELEVENLABS)"
 ```
 
 ### WebSocket connection fails:
+
 ```bash
 # Verify port
 netstat -an | grep 8080
@@ -146,6 +169,7 @@ netstat -an | grep 8080
 ```
 
 ### High latency:
+
 ```bash
 # Check API keys are valid
 # Verify network connection
@@ -155,6 +179,7 @@ netstat -an | grep 8080
 ```
 
 ### Early exit not triggering:
+
 ```bash
 # Check pattern matching:
 node src/__manual-tests__/phase2-verify.js
@@ -188,6 +213,7 @@ Before deploying to production:
 ## Support
 
 For issues or questions:
+
 1. Review server logs for detailed latency metrics
 2. Check verification scripts pass
 3. Validate API keys and Twilio configuration

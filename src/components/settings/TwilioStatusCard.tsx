@@ -18,7 +18,7 @@ export function TwilioStatusCard({ clinicPhone }: TwilioStatusCardProps) {
           <p className="text-sm text-muted-foreground">Twilio connection for AI calls</p>
         </div>
       </div>
-      
+
       {isConfigured ? (
         <div className="p-4 rounded-xl bg-success/5 border border-success/20">
           <div className="flex items-center gap-2">

@@ -2,9 +2,16 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Bot, Loader2, Sparkles } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Bot, Loader2, Sparkles, Cpu, Zap, ShieldAlert, Target, ArrowRight } from 'lucide-react';
 import { AISettings } from '@/contexts/ClinicContext';
+import { cn } from '@/lib/utils';
 
 interface StepAISetupProps {
   aiSettings: AISettings;
@@ -14,23 +21,15 @@ interface StepAISetupProps {
 
 export function StepAISetup({ aiSettings, onSave, isLoading }: StepAISetupProps) {
   const [confirmAutomatically, setConfirmAutomatically] = useState(
-    aiSettings.confirmation_calls_enabled ?? true
+    aiSettings.confirmation_calls_enabled ?? true,
   );
-  const [autoReschedule, setAutoReschedule] = useState(
-    aiSettings.auto_reschedule_enabled ?? true
-  );
-  const [followUpEnabled, setFollowUpEnabled] = useState(
-    aiSettings.follow_up_enabled ?? true
-  );
+  const [autoReschedule, setAutoReschedule] = useState(aiSettings.auto_reschedule_enabled ?? true);
+  const [followUpEnabled, setFollowUpEnabled] = useState(aiSettings.follow_up_enabled ?? true);
   const [escalateWhenUnsure, setEscalateWhenUnsure] = useState(
-    aiSettings.escalate_when_unsure ?? true
+    aiSettings.escalate_when_unsure ?? true,
   );
-  const [maxAttempts, setMaxAttempts] = useState(
-    String(aiSettings.max_follow_up_attempts || 2)
-  );
-  const [delayHours, setDelayHours] = useState(
-    String(aiSettings.follow_up_delay_hours || 6)
-  );
+  const [maxAttempts, setMaxAttempts] = useState(String(aiSettings.max_follow_up_attempts || 2));
+  const [delayHours, setDelayHours] = useState(String(aiSettings.follow_up_delay_hours || 6));
 
   const handleActivate = async () => {
     const newSettings: AISettings = {
@@ -46,115 +45,113 @@ export function StepAISetup({ aiSettings, onSave, isLoading }: StepAISetupProps)
   };
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="space-y-2">
+    <div className="space-y-10">
+      {/* Module Header */}
+      <div className="space-y-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Bot className="h-5 w-5 text-primary" />
+          <div className="p-1 px-2 border border-primary/30 bg-primary/10">
+            <Cpu className="h-4 w-4 text-primary" />
           </div>
-          <h2 className="text-xl font-semibold text-foreground">
-            How should we handle patient calls?
-          </h2>
+          <h2 className="text-xl font-bold text-white uppercase italic tracking-tight">Neural Core Calibration</h2>
         </div>
-        <p className="text-sm text-muted-foreground">
-          You stay in control. You can change this anytime.
+        <p className="text-[11px] font-mono text-muted-foreground uppercase leading-relaxed max-w-md">
+          Configure autonomous decision matrices. These parameters define the logic gates for the AI Receptionist.
         </p>
       </div>
 
-      {/* Toggle Options */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 rounded-xl bg-background/30 border border-white/5">
-          <div className="space-y-0.5">
-            <Label className="text-foreground font-medium">
-              Confirm appointments automatically
-            </Label>
-            <p className="text-xs text-muted-foreground">
-              We'll call patients to confirm their upcoming appointments
-            </p>
+      {/* Logic Gates Suite */}
+      <div className="grid grid-cols-1 gap-4">
+        {[
+          {
+            label: 'CONFIRM_AUTO_DISPATCH',
+            desc: 'Execute autonomous outbound confirmation sequences.',
+            state: confirmAutomatically,
+            setter: setConfirmAutomatically,
+            icon: Zap
+          },
+          {
+            label: 'AUTO_TIMELINE_RECOVERY',
+            desc: 'Recalibrate appointments if subject is non-compliant.',
+            state: autoReschedule,
+            setter: setAutoReschedule,
+            icon: Target
+          },
+          {
+            label: 'PERSISTENT_RETRY_LOOP',
+            desc: 'Re-engage if initial transmission fails to authenticate.',
+            state: followUpEnabled,
+            setter: setFollowUpEnabled,
+            icon: Cpu
+          },
+          {
+            label: 'HUMAN_OVERRRIDE_PROTOCOL',
+            desc: 'Escalate complex neural outputs to manual staff review.',
+            state: escalateWhenUnsure,
+            setter: setEscalateWhenUnsure,
+            icon: ShieldAlert
+          }
+        ].map((gate, i) => (
+          <div key={i} className={cn(
+            "group relative overflow-hidden bg-black/40 border p-5 transition-all",
+            gate.state ? "border-primary/30" : "border-white/5"
+          )}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={cn(
+                  "h-8 w-8 flex items-center justify-center border",
+                  gate.state ? "border-primary/20 bg-primary/5 text-primary" : "border-white/5 bg-white/5 text-muted-foreground opacity-30"
+                )}>
+                  {typeof gate.icon === 'function' ? <gate.icon className="h-4 w-4" /> : <gate.icon className="h-4 w-4" />}
+                </div>
+                <div className="flex flex-col">
+                  <Label className="text-[11px] font-mono font-bold text-white uppercase tracking-widest">{gate.label}</Label>
+                  <p className="text-[9px] font-mono text-muted-foreground uppercase opacity-60 mt-0.5">{gate.desc}</p>
+                </div>
+              </div>
+              <Switch checked={gate.state} onCheckedChange={gate.setter} className="data-[state=checked]:bg-primary" />
+            </div>
+            <div className={cn(
+              "absolute bottom-0 left-0 h-[2px] w-full transition-transform origin-left",
+              gate.state ? "bg-primary/40 scale-x-100" : "bg-white/5 scale-x-0"
+            )} />
           </div>
-          <Switch
-            checked={confirmAutomatically}
-            onCheckedChange={setConfirmAutomatically}
-          />
-        </div>
-
-        <div className="flex items-center justify-between p-4 rounded-xl bg-background/30 border border-white/5">
-          <div className="space-y-0.5">
-            <Label className="text-foreground font-medium">
-              Reschedule if patient is unavailable
-            </Label>
-            <p className="text-xs text-muted-foreground">
-              We'll offer alternative times when patients can't make it
-            </p>
-          </div>
-          <Switch
-            checked={autoReschedule}
-            onCheckedChange={setAutoReschedule}
-          />
-        </div>
-
-        <div className="flex items-center justify-between p-4 rounded-xl bg-background/30 border border-white/5">
-          <div className="space-y-0.5">
-            <Label className="text-foreground font-medium">
-              Follow up if patient doesn't respond
-            </Label>
-            <p className="text-xs text-muted-foreground">
-              We'll try again later if we can't reach them
-            </p>
-          </div>
-          <Switch
-            checked={followUpEnabled}
-            onCheckedChange={setFollowUpEnabled}
-          />
-        </div>
-
-        <div className="flex items-center justify-between p-4 rounded-xl bg-background/30 border border-white/5">
-          <div className="space-y-0.5">
-            <Label className="text-foreground font-medium">
-              Escalate to staff if unsure
-            </Label>
-            <p className="text-xs text-muted-foreground">
-              Complex requests will be flagged for your team to handle
-            </p>
-          </div>
-          <Switch
-            checked={escalateWhenUnsure}
-            onCheckedChange={setEscalateWhenUnsure}
-          />
-        </div>
+        ))}
       </div>
 
-      {/* Follow-up Configuration */}
+      {/* Persistence Parameters */}
       {followUpEnabled && (
-        <div className="p-4 rounded-xl bg-background/20 border border-white/5 space-y-4">
-          <Label className="text-foreground font-medium">Follow-up rules</Label>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Attempts</Label>
+        <div className="bg-[#051a1e] border border-white/10 p-6 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="h-1 w-4 bg-primary" />
+            <Label className="text-[10px] font-mono font-bold text-white uppercase tracking-widest">Persistence Config</Label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <Label className="text-[9px] font-mono font-bold text-muted-foreground uppercase opacity-50">RETRY_THRESHOLD</Label>
               <Select value={maxAttempts} onValueChange={setMaxAttempts}>
-                <SelectTrigger className="bg-background/50 border-white/10">
+                <SelectTrigger className="rounded-none bg-black/40 border-white/10 font-mono text-xs uppercase h-10">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 attempt</SelectItem>
-                  <SelectItem value="2">2 attempts</SelectItem>
-                  <SelectItem value="3">3 attempts</SelectItem>
+                <SelectContent className="rounded-none border-white/10 bg-[#051a1e]">
+                  <SelectItem value="1" className="font-mono text-xs uppercase">01 CYCLE</SelectItem>
+                  <SelectItem value="2" className="font-mono text-xs uppercase">02 CYCLES</SelectItem>
+                  <SelectItem value="3" className="font-mono text-xs uppercase">03 CYCLES</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Time between attempts</Label>
+            <div className="space-y-3">
+              <Label className="text-[9px] font-mono font-bold text-muted-foreground uppercase opacity-50">COOL_DOWN_INDEX</Label>
               <Select value={delayHours} onValueChange={setDelayHours}>
-                <SelectTrigger className="bg-background/50 border-white/10">
+                <SelectTrigger className="rounded-none bg-black/40 border-white/10 font-mono text-xs uppercase h-10">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2">2 hours</SelectItem>
-                  <SelectItem value="6">6 hours</SelectItem>
-                  <SelectItem value="12">12 hours</SelectItem>
-                  <SelectItem value="24">24 hours</SelectItem>
+                <SelectContent className="rounded-none border-white/10 bg-[#051a1e]">
+                  <SelectItem value="2" className="font-mono text-xs uppercase">02 HOURS</SelectItem>
+                  <SelectItem value="6" className="font-mono text-xs uppercase">06 HOURS</SelectItem>
+                  <SelectItem value="12" className="font-mono text-xs uppercase">12 HOURS</SelectItem>
+                  <SelectItem value="24" className="font-mono text-xs uppercase">24 HOURS</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -162,28 +159,33 @@ export function StepAISetup({ aiSettings, onSave, isLoading }: StepAISetupProps)
         </div>
       )}
 
-      {/* Helper Text */}
-      <p className="text-sm text-muted-foreground text-center">
-        Nothing is final. You can pause anytime from settings.
-      </p>
+      {/* Safety Net Disclaimer */}
+      <div className="flex items-center gap-3 justify-center opacity-40">
+        <ShieldAlert className="h-3 w-3 text-warning" />
+        <p className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">
+          OPERATIONAL_OVERRIDE_AVAILABLE_POST_DEPLOYMENT
+        </p>
+      </div>
 
-      {/* CTA */}
+      {/* Deployment Action */}
       <Button
         onClick={handleActivate}
         disabled={isLoading}
-        className="btn-gold w-full py-6 text-base"
+        className="btn-gold w-full h-16 group relative overflow-hidden"
       >
         {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Activating...
-          </>
+          <div className="flex items-center gap-3">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span className="text-xs font-mono font-bold uppercase tracking-widest">Activating Neural Core...</span>
+          </div>
         ) : (
-          <>
-            <Sparkles className="mr-2 h-5 w-5" />
-            Activate AI Receptionist
-          </>
+          <div className="flex items-center gap-3">
+            <Sparkles className="h-5 w-5" />
+            <span className="text-xs font-mono font-bold uppercase tracking-widest">Ignite Autonomous Receptionist</span>
+            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-2" />
+          </div>
         )}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
       </Button>
     </div>
   );

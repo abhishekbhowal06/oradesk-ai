@@ -37,19 +37,11 @@ export function WarningBanner({
   const style = styles[type];
 
   return (
-    <div
-      className={cn(
-        'flex items-start gap-3 p-4 rounded-xl border',
-        style.bg,
-        className
-      )}
-    >
+    <div className={cn('flex items-start gap-3 p-4 rounded-xl border', style.bg, className)}>
       <div className="flex-shrink-0 mt-0.5">{style.icon}</div>
       <div className="flex-1 min-w-0">
         <p className={cn('text-sm font-medium', style.text)}>{title}</p>
-        {description && (
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
-        )}
+        {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
       </div>
       {onDismiss && (
         <button

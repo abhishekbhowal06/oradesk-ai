@@ -1,0 +1,49 @@
+# ── Root .dockerignore ────────────────────────────────
+# Keeps Docker build context small and images lean.
+
+# Dependencies (re-installed inside container)
+node_modules/
+services/*/node_modules/
+
+# Build artifacts (rebuilt inside container)
+dist/
+
+# Git
+.git/
+.gitignore
+
+# Environment files (secrets — never bake in)
+.env
+.env.*
+!.env.example
+services/ai-calling/.env
+services/ai-calling/.env.*
+!services/ai-calling/.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
+
+# Tests & dev tooling
+tests/
+**/__tests__/
+**/__manual-tests__/
+playwright.config.ts
+vitest.config.ts
+coverage/
+
+# Reports & docs
+*.md
+!README.md
+architecture/
+
+# Logs & temp
+*.log
+*.txt
+build_*.log
+lint_*.txt
+bun.lockb

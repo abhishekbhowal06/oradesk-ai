@@ -1,23 +1,28 @@
 {
-    "name": "dentacore-bridge",
-    "version": "0.1.0",
-    "description": "Local On-Premise Sync Agent for Dentacore OS",
-    "main": "dist/index.js",
-    "scripts": {
-        "build": "tsc",
-        "start": "node dist/index.js",
-        "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
-    },
-    "dependencies": {
-        "@supabase/supabase-js": "^2.39.0",
-        "dotenv": "^16.3.1",
-        "winston": "^3.11.0",
-        "node-cron": "^3.0.3"
-    },
-    "devDependencies": {
-        "@types/node": "^20.10.0",
-        "@types/node-cron": "^3.0.11",
-        "ts-node-dev": "^2.0.0",
-        "typescript": "^5.3.0"
-    }
+  "name": "oradesk-bridge",
+  "version": "1.0.0",
+  "description": "OraDesk AI — Local PMS Bridge Agent (OpenDental)",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "setup": "node dist/index.js --setup",
+    "test-pms": "node dist/index.js --test",
+    "status": "node dist/index.js --status",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.3.1",
+    "mysql2": "^3.9.0",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

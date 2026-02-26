@@ -3,7 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useClinic } from '@/contexts/ClinicContext';
 import { useToast } from '@/hooks/use-toast';
 
-export type AppointmentStatus = 'scheduled' | 'confirmed' | 'rescheduled' | 'completed' | 'missed' | 'cancelled';
+export type AppointmentStatus =
+  | 'scheduled'
+  | 'confirmed'
+  | 'rescheduled'
+  | 'completed'
+  | 'missed'
+  | 'cancelled';
 
 export interface Appointment {
   id: string;
@@ -62,7 +68,8 @@ export function useAppointments(options?: { date?: string; status?: AppointmentS
 
       let queryBuilder = supabase
         .from('appointments')
-        .select(`
+        .select(
+          `
           *,
           patient:patients (
             id,
@@ -71,7 +78,8 @@ export function useAppointments(options?: { date?: string; status?: AppointmentS
             phone,
             email
           )
-        `)
+        `,
+        )
         .eq('clinic_id', currentClinic.id)
         .order('scheduled_at', { ascending: true });
 
@@ -79,9 +87,7 @@ export function useAppointments(options?: { date?: string; status?: AppointmentS
         // Filter by date
         const startOfDay = `${options.date}T00:00:00`;
         const endOfDay = `${options.date}T23:59:59`;
-        queryBuilder = queryBuilder
-          .gte('scheduled_at', startOfDay)
-          .lte('scheduled_at', endOfDay);
+        queryBuilder = queryBuilder.gte('scheduled_at', startOfDay).lte('scheduled_at', endOfDay);
       }
 
       if (options?.status) {
@@ -120,7 +126,11 @@ export function useAppointments(options?: { date?: string; status?: AppointmentS
     },
     onError: (error) => {
       console.error('Error creating appointment:', error);
-      toast({ title: 'Error', description: 'Failed to create appointment.', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Failed to create appointment.',
+        variant: 'destructive',
+      });
     },
   });
 
@@ -142,14 +152,18 @@ export function useAppointments(options?: { date?: string; status?: AppointmentS
     },
     onError: (error) => {
       console.error('Error updating appointment:', error);
-      toast({ title: 'Error', description: 'Failed to update appointment.', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Failed to update appointment.',
+        variant: 'destructive',
+      });
     },
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: AppointmentStatus }) => {
       const updates: Partial<Appointment> = { status };
-      
+
       if (status === 'confirmed') {
         updates.confirmed_at = new Date().toISOString();
       }
@@ -166,9 +180,9 @@ export function useAppointments(options?: { date?: string; status?: AppointmentS
     },
     onSuccess: (_, { status }) => {
       queryClient.invalidateQueries({ queryKey: ['appointments', currentClinic?.id] });
-      toast({ 
-        title: 'Status updated', 
-        description: `Appointment marked as ${status}.` 
+      toast({
+        title: 'Status updated',
+        description: `Appointment marked as ${status}.`,
       });
     },
     onError: (error) => {
@@ -188,7 +202,11 @@ export function useAppointments(options?: { date?: string; status?: AppointmentS
     },
     onError: (error) => {
       console.error('Error deleting appointment:', error);
-      toast({ title: 'Error', description: 'Failed to delete appointment.', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Failed to delete appointment.',
+        variant: 'destructive',
+      });
     },
   });
 
@@ -226,7 +244,8 @@ export function useUpcomingAppointments(days: number = 7) {
 
       const { data, error } = await supabase
         .from('appointments')
-        .select(`
+        .select(
+          `
           *,
           patient:patients (
             id,
@@ -235,7 +254,8 @@ export function useUpcomingAppointments(days: number = 7) {
             phone,
             email
           )
-        `)
+        `,
+        )
         .eq('clinic_id', currentClinic.id)
         .gte('scheduled_at', now.toISOString())
         .lte('scheduled_at', endDate.toISOString())

@@ -1,0 +1,114 @@
+{
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "analyze_patient_intent",
+        "description": "Log the patient's current emotional state, urgency, and objections. Use this continuously as the conversation evolves to build behavioral memory.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "call_id": {
+              "type": "string"
+            },
+            "patient_id": {
+              "type": "string"
+            },
+            "urgency": {
+              "type": "string",
+              "enum": ["emergency", "soon", "routine", "low_priority"]
+            },
+            "emotion": {
+              "type": "string",
+              "enum": ["pain", "fear", "price_concern", "casual", "frustrated", "confused", "angry"]
+            },
+            "objection": {
+              "type": "string",
+              "description": "e.g. 'too expensive', 'scared of drills', 'distance'"
+            },
+            "booking_intent_score": {
+              "type": "number",
+              "description": "0.0 to 1.0 probability of booking"
+            }
+          },
+          "required": ["call_id", "patient_id", "urgency", "emotion"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_strategic_slots",
+        "description": "Fetch available slots optimized for clinic revenue and patient urgency. Replaces get_available_slots.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "clinic_id": {
+              "type": "string"
+            },
+            "urgency": {
+              "type": "string",
+              "enum": ["emergency", "soon", "routine"]
+            },
+            "treatment_value": {
+              "type": "string",
+              "enum": ["low", "medium", "high"],
+              "description": "Estimated value of the intended treatment."
+            }
+          },
+          "required": ["clinic_id", "urgency"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "lock_slot",
+        "description": "Temporarily reserve a specific slot for the user while they decide. Use this IMMEDIATELY when the user selects a time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "slot_id": {
+              "type": "string",
+              "description": "UUID of the slot to lock."
+            },
+            "call_id": {
+              "type": "string",
+              "description": "UUID of the current call session."
+            }
+          },
+          "required": ["slot_id", "call_id"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "confirm_booking",
+        "description": "Finalize the appointment and write it to the Practice Management System. Use this ONLY after the user explicitly confirms the locked slot.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "slot_id": {
+              "type": "string",
+              "description": "UUID of the locked slot."
+            },
+            "call_id": {
+              "type": "string",
+              "description": "UUID of the current call session."
+            },
+            "patient_id": {
+              "type": "string",
+              "description": "UUID of the patient."
+            },
+            "notes": {
+              "type": "string",
+              "description": "Any special notes from the user."
+            }
+          },
+          "required": ["slot_id", "call_id", "patient_id"]
+        }
+      }
+    }
+  ]
+}

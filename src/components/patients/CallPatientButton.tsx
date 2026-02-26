@@ -83,7 +83,7 @@ export function CallPatientButton({
           title: 'Call Initiated',
           description: `AI is now calling ${patientName}. Check Call Logs for status.`,
         });
-        
+
         // Invalidate queries to refresh call logs
         queryClient.invalidateQueries({ queryKey: ['ai_calls'] });
       } else {
@@ -104,17 +104,8 @@ export function CallPatientButton({
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
-        <Button
-          variant={variant}
-          size={size}
-          disabled={isLoading}
-          className="gap-2"
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Phone className="h-4 w-4" />
-          )}
+        <Button variant={variant} size={size} disabled={isLoading} className="gap-2">
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Phone className="h-4 w-4" />}
           {size !== 'icon' && (isLoading ? 'Calling...' : 'Call Patient')}
         </Button>
       </AlertDialogTrigger>

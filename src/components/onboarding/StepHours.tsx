@@ -3,9 +3,16 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, ArrowRight, Loader2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Clock, ArrowRight, Loader2, Activity, ShieldCheck } from 'lucide-react';
 import { WorkingHours } from '@/contexts/ClinicContext';
+import { cn } from '@/lib/utils';
 
 interface StepHoursProps {
   workingHours: WorkingHours;
@@ -14,29 +21,20 @@ interface StepHoursProps {
 }
 
 const DAYS = [
-  { key: 'monday', label: 'Mon' },
-  { key: 'tuesday', label: 'Tue' },
-  { key: 'wednesday', label: 'Wed' },
-  { key: 'thursday', label: 'Thu' },
-  { key: 'friday', label: 'Fri' },
-  { key: 'saturday', label: 'Sat' },
-  { key: 'sunday', label: 'Sun' },
+  { key: 'monday', label: 'MON' },
+  { key: 'tuesday', label: 'TUE' },
+  { key: 'wednesday', label: 'WED' },
+  { key: 'thursday', label: 'THU' },
+  { key: 'friday', label: 'FRI' },
+  { key: 'saturday', label: 'SAT' },
+  { key: 'sunday', label: 'SUN' },
 ];
 
 const TIME_OPTIONS = [
-  '06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30',
-  '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
-  '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30',
-  '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00',
+  '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00',
+  '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00',
+  '20:00', '21:00', '22:00'
 ];
-
-function formatTime(time: string): string {
-  const [hours, minutes] = time.split(':');
-  const hour = parseInt(hours, 10);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-  return `${displayHour}:${minutes} ${ampm}`;
-}
 
 export function StepHours({ workingHours, onSave, isLoading }: StepHoursProps) {
   const [openTime, setOpenTime] = useState(workingHours.monday?.start || '09:00');
@@ -53,7 +51,7 @@ export function StepHours({ workingHours, onSave, isLoading }: StepHoursProps) {
   const [callDuringHoursOnly, setCallDuringHoursOnly] = useState(true);
 
   const handleDayToggle = (day: string) => {
-    setWorkingDays(prev => ({ ...prev, [day]: !prev[day] }));
+    setWorkingDays((prev) => ({ ...prev, [day]: !prev[day] }));
   };
 
   const handleSave = async () => {
@@ -69,50 +67,48 @@ export function StepHours({ workingHours, onSave, isLoading }: StepHoursProps) {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="space-y-2">
+    <div className="space-y-10">
+      {/* Module Header */}
+      <div className="space-y-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Clock className="h-5 w-5 text-primary" />
+          <div className="p-1 px-2 border border-primary/30 bg-primary/10">
+            <Clock className="h-4 w-4 text-primary" />
           </div>
-          <h2 className="text-xl font-semibold text-foreground">
-            When should we answer calls?
-          </h2>
+          <h2 className="text-xl font-bold text-white uppercase italic tracking-tight">Temporal Windows</h2>
         </div>
-        <p className="text-sm text-muted-foreground">
-          We'll handle patient calls during your clinic hours
+        <p className="text-[11px] font-mono text-muted-foreground uppercase leading-relaxed max-w-md">
+          Define primary operational cycles. The Neural Engine will synchronize its communication cadence with these parameters.
         </p>
       </div>
 
-      {/* Time Pickers */}
-      <div className="grid grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label className="text-foreground">Clinic opens at</Label>
+      {/* Grid: Time Pickers */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="space-y-3 p-4 bg-white/5 border border-white/5">
+          <Label className="text-[10px] font-mono font-bold text-primary uppercase tracking-widest">START_INDEX</Label>
           <Select value={openTime} onValueChange={setOpenTime}>
-            <SelectTrigger className="bg-background/50 border-white/10">
+            <SelectTrigger className="rounded-none bg-black/40 border-white/10 font-mono text-sm uppercase h-12">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-none border-white/10 bg-[#051a1e]">
               {TIME_OPTIONS.map((time) => (
-                <SelectItem key={time} value={time}>
-                  {formatTime(time)}
+                <SelectItem key={time} value={time} className="font-mono text-xs uppercase focus:bg-primary/20">
+                  {time} HOURS
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-foreground">Clinic closes at</Label>
+        <div className="space-y-3 p-4 bg-white/5 border border-white/5">
+          <Label className="text-[10px] font-mono font-bold text-primary uppercase tracking-widest">HALT_INDEX</Label>
           <Select value={closeTime} onValueChange={setCloseTime}>
-            <SelectTrigger className="bg-background/50 border-white/10">
+            <SelectTrigger className="rounded-none bg-black/40 border-white/10 font-mono text-sm uppercase h-12">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-none border-white/10 bg-[#051a1e]">
               {TIME_OPTIONS.map((time) => (
-                <SelectItem key={time} value={time}>
-                  {formatTime(time)}
+                <SelectItem key={time} value={time} className="font-mono text-xs uppercase focus:bg-primary/20">
+                  {time} HOURS
                 </SelectItem>
               ))}
             </SelectContent>
@@ -120,59 +116,75 @@ export function StepHours({ workingHours, onSave, isLoading }: StepHoursProps) {
         </div>
       </div>
 
-      {/* Working Days */}
-      <div className="space-y-3">
-        <Label className="text-foreground">Working days</Label>
-        <div className="flex flex-wrap gap-3">
-          {DAYS.map(({ key, label }) => (
-            <label
-              key={key}
-              className="flex items-center gap-2 cursor-pointer select-none"
-            >
-              <Checkbox
-                checked={workingDays[key]}
-                onCheckedChange={() => handleDayToggle(key)}
-                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-              />
-              <span className="text-sm text-foreground">{label}</span>
-            </label>
-          ))}
+      {/* Grid: Working Days Matrix */}
+      <div className="space-y-4">
+        <Label className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest">ACTIVE_DAY_MATRIX</Label>
+        <div className="grid grid-cols-4 md:grid-cols-7 gap-px bg-white/10 p-px">
+          {DAYS.map(({ key, label }) => {
+            const active = workingDays[key];
+            return (
+              <label
+                key={key}
+                className={cn(
+                  "flex flex-col items-center justify-center py-4 cursor-pointer transition-all",
+                  active ? "bg-primary/10 text-white" : "bg-black/40 text-muted-foreground opacity-40 hover:opacity-100"
+                )}
+              >
+                <Checkbox
+                  checked={active}
+                  onCheckedChange={() => handleDayToggle(key)}
+                  className="hidden"
+                />
+                <span className="text-[10px] font-mono font-bold tracking-widest">{label}</span>
+                <div className={cn(
+                  "h-1 w-4 mt-2",
+                  active ? "bg-primary animate-pulse" : "bg-white/10"
+                )} />
+              </label>
+            )
+          })}
         </div>
       </div>
 
-      {/* AI Hours Toggle */}
-      <div className="flex items-center justify-between p-4 rounded-xl bg-background/30 border border-white/5">
-        <div className="space-y-0.5">
-          <Label className="text-foreground font-medium">
-            Allow AI calls only during clinic hours
-          </Label>
-          <p className="text-xs text-muted-foreground">
-            Outside these hours, calls will be handled by staff or paused
-          </p>
+      {/* AI Hours Lock */}
+      <div className="group relative overflow-hidden bg-black/40 border border-white/10 p-6 transition-all hover:border-info/30">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <Label className="text-[11px] font-mono font-bold text-white uppercase tracking-widest">
+              HARD_WINDOW_STRICTURE
+            </Label>
+            <p className="text-[10px] font-mono text-muted-foreground uppercase opacity-60">
+              Restrict Neural Engine transmissions to defined temporal indices only.
+            </p>
+          </div>
+          <Switch
+            checked={callDuringHoursOnly}
+            onCheckedChange={setCallDuringHoursOnly}
+            className="data-[state=checked]:bg-info"
+          />
         </div>
-        <Switch
-          checked={callDuringHoursOnly}
-          onCheckedChange={setCallDuringHoursOnly}
-        />
+        <div className="absolute bottom-0 left-0 h-[2px] w-full bg-info/20 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
       </div>
 
-      {/* CTA */}
+      {/* Action Suite */}
       <Button
         onClick={handleSave}
         disabled={isLoading}
-        className="btn-gold w-full py-6 text-base"
+        className="btn-gold w-full h-16 group relative overflow-hidden"
       >
         {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Saving...
-          </>
+          <div className="flex items-center gap-3">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span className="text-xs font-mono font-bold uppercase tracking-widest">Committing Sequence...</span>
+          </div>
         ) : (
-          <>
-            Save & Continue
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </>
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="h-5 w-5" />
+            <span className="text-xs font-mono font-bold uppercase tracking-widest">Authorize Temporal Grid</span>
+            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-2" />
+          </div>
         )}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
       </Button>
     </div>
   );

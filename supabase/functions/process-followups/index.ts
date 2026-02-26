@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,10 +22,10 @@ serve(async (req) => {
     if (CRON_SECRET) {
       if (!authHeader || authHeader !== `Bearer ${CRON_SECRET}`) {
         console.error('Unauthorized cron call attempt');
-        return new Response(
-          JSON.stringify({ error: 'Unauthorized' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
     }
 
@@ -41,7 +41,8 @@ serve(async (req) => {
     // Find pending follow-ups that are due
     const { data: pendingFollowups, error: fetchError } = await supabase
       .from('follow_up_schedules')
-      .select(`
+      .select(
+        `
         *,
         patient:patients (
           id,
@@ -54,7 +55,8 @@ serve(async (req) => {
           scheduled_at,
           procedure_name
         )
-      `)
+      `,
+      )
       .eq('status', 'pending')
       .lte('scheduled_for', now)
       .order('scheduled_for', { ascending: true })
@@ -155,7 +157,7 @@ serve(async (req) => {
 
         // Initiate Twilio call
         const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Calls.json`;
-        
+
         const formData = new URLSearchParams();
         formData.append('To', patientPhone);
         formData.append('From', TWILIO_PHONE_NUMBER);
@@ -167,7 +169,7 @@ serve(async (req) => {
         const twilioResponse = await fetch(twilioUrl, {
           method: 'POST',
           headers: {
-            'Authorization': `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`,
+            Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
           body: formData,
@@ -175,12 +177,9 @@ serve(async (req) => {
 
         if (!twilioResponse.ok) {
           console.error('Twilio API error');
-          
+
           // Update call as failed and schedule retry
-          await supabase
-            .from('ai_calls')
-            .update({ status: 'failed' })
-            .eq('id', callRecord.id);
+          await supabase.from('ai_calls').update({ status: 'failed' }).eq('id', callRecord.id);
 
           const nextAttempt = new Date();
           nextAttempt.setHours(nextAttempt.getHours() + followup.delay_hours);
@@ -228,8 +227,8 @@ serve(async (req) => {
           patient_id: followup.patient_id,
           appointment_id: followup.appointment_id,
           ai_call_id: callRecord.id,
-          event_data: { 
-            call_type: 'follow_up', 
+          event_data: {
+            call_type: 'follow_up',
             attempt_number: followup.attempt_number + 1,
           },
         });
@@ -237,7 +236,9 @@ serve(async (req) => {
         results.called++;
         results.processed++;
       } catch (err) {
-        results.errors.push(`Error processing ${followup.id}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        results.errors.push(
+          `Error processing ${followup.id}: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        );
       }
     }
 
@@ -247,13 +248,13 @@ serve(async (req) => {
         timestamp: now,
         ...results,
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (error) {
     console.error('Error in process-followups:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 });

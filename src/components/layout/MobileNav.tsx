@@ -1,11 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Calendar,
-  Users,
-  Phone,
-  BarChart3,
-} from 'lucide-react';
+import { LayoutDashboard, Calendar, Users, Phone, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -31,7 +25,7 @@ export function MobileNav() {
                   to={item.path}
                   className={cn(
                     'flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200',
-                    isActive ? 'text-primary' : 'text-muted-foreground'
+                    isActive ? 'text-primary' : 'text-muted-foreground',
                   )}
                 >
                   <item.icon className="h-5 w-5" />

@@ -100,9 +100,7 @@ export function ScheduleAppointmentDialog({
     });
   };
 
-  const formattedDate = selectedDate
-    ? format(parseISO(selectedDate), 'EEEE, MMMM d, yyyy')
-    : '';
+  const formattedDate = selectedDate ? format(parseISO(selectedDate), 'EEEE, MMMM d, yyyy') : '';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

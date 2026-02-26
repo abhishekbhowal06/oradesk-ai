@@ -30,6 +30,7 @@ export interface StaffTask {
     id: string;
     first_name: string;
     last_name: string;
+    phone: string | null;
   };
   assigned_profile?: {
     id: string;
@@ -61,14 +62,17 @@ export function useStaffTasks(options?: { status?: TaskStatus; priority?: TaskPr
 
       let queryBuilder = supabase
         .from('staff_tasks')
-        .select(`
+        .select(
+          `
           *,
           patient:patients (
             id,
             first_name,
-            last_name
+            last_name,
+            phone
           )
-        `)
+        `,
+        )
         .eq('clinic_id', currentClinic.id)
         .order('created_at', { ascending: false });
 
@@ -119,7 +123,7 @@ export function useStaffTasks(options?: { status?: TaskStatus; priority?: TaskPr
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: TaskStatus }) => {
       const updates: Partial<StaffTask> = { status };
-      
+
       if (status === 'completed') {
         updates.completed_at = new Date().toISOString();
         updates.completed_by = user?.id;

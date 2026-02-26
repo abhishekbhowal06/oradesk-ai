@@ -10,134 +10,136 @@ import {
 import { useWeeklyStats } from '@/hooks/useAnalytics';
 import { LoadingState } from '@/components/states/LoadingState';
 import { EmptyState } from '@/components/states/EmptyState';
-import { Info } from 'lucide-react';
-import { SystemTooltip } from '@/components/ui/SystemTooltip';
+import { cn } from '@/lib/utils';
 
 export function WeeklyChart() {
   const { data: weeklyStats, isLoading } = useWeeklyStats();
 
   if (isLoading) {
-    return <LoadingState variant="chart" />;
+    return (
+      <div className="h-[400px] flex items-center justify-center">
+        <LoadingState variant="chart" />
+      </div>
+    );
   }
 
   if (!weeklyStats || weeklyStats.length === 0) {
     return (
-      <div className="glass-card p-6">
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-foreground">Weekly Performance</h3>
-          <p className="text-sm text-muted-foreground mt-1">Revenue and activity trends</p>
-        </div>
-        <EmptyState 
-          type="analytics" 
+      <div className="h-[400px] flex flex-col justify-center">
+        <EmptyState
+          type="analytics"
           title="Insufficient Data"
-          description="Weekly analytics require at least 7 days of recorded activity."
+          description="Weekly analytics require at least 7 days of recorded activity to display."
         />
       </div>
     );
   }
 
-  // Check if there's any data
-  const hasData = weeklyStats.some(d => d.revenue > 0 || d.calls > 0 || d.appointments > 0);
+  const hasData = weeklyStats.some((d) => d.revenue > 0 || d.calls > 0 || d.appointments > 0);
 
   if (!hasData) {
     return (
-      <div className="glass-card p-6">
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-foreground">Weekly Performance</h3>
-          <p className="text-sm text-muted-foreground mt-1">Revenue and activity trends</p>
-        </div>
-        <EmptyState 
-          type="analytics" 
-          title="No Activity Yet"
-          description="Charts will populate as AI handles calls and appointments are scheduled."
+      <div className="h-[400px] flex flex-col justify-center">
+        <EmptyState
+          type="analytics"
+          title="No Recent Activity"
+          description="Charts will automatically populate as AI handles calls and schedules appointments."
         />
       </div>
     );
   }
 
   return (
-    <div className="glass-card hover-glow p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground">Weekly Performance</h3>
-          <p className="text-sm text-muted-foreground mt-1">Revenue and AI conversation trends</p>
-        </div>
-        <SystemTooltip content="Shows revenue from appointments and total AI-managed conversations per day">
-          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-        </SystemTooltip>
-      </div>
-      
-      <div className="h-[280px]">
+    <div className="h-full flex flex-col">
+      <div className="h-[300px] w-full mt-4">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
-            data={weeklyStats}
-            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-          >
+          <AreaChart data={weeklyStats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(43, 67%, 52%)" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="hsl(43, 67%, 52%)" stopOpacity={0} />
+                <stop offset="5%" stopColor="#1F8A8A" stopOpacity={0.15} />
+                <stop offset="95%" stopColor="#1F8A8A" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="colorCalls" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(200, 50%, 50%)" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="hsl(200, 50%, 50%)" stopOpacity={0} />
+                <stop offset="5%" stopColor="#2FA4A4" stopOpacity={0.15} />
+                <stop offset="95%" stopColor="#2FA4A4" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" vertical={false} />
             <XAxis
               dataKey="day"
-              stroke="hsl(200, 15%, 60%)"
-              fontSize={12}
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={11}
               tickLine={false}
               axisLine={false}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }}
+              dy={10}
             />
             <YAxis
-              stroke="hsl(200, 15%, 60%)"
-              fontSize={12}
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={11}
               tickLine={false}
               axisLine={false}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }}
               tickFormatter={(value) => `$${value}`}
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(195, 100%, 11%)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '12px',
-                boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+              content={({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                  return (
+                    <div className="bg-background border border-border p-3 shadow-md rounded-xl space-y-2">
+                      <p className="text-xs font-semibold text-foreground border-b border-border pb-1 mb-2 tracking-wide">{label}</p>
+                      {payload.map((p, i) => (
+                        <div key={i} className="flex items-center justify-between gap-6">
+                          <span className="text-xs font-medium text-muted-foreground">{p.name}</span>
+                          <span className={cn("text-xs font-bold", p.name === 'Revenue' ? "text-primary" : "text-primary/70")}>
+                            {p.name === 'Revenue' ? `$${p.value.toLocaleString()}` : `${p.value} Calls`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+                return null;
               }}
-              labelStyle={{ color: 'hsl(40, 7%, 89%)', fontWeight: 500 }}
-              itemStyle={{ color: 'hsl(200, 15%, 73%)' }}
             />
             <Area
               type="monotone"
               dataKey="revenue"
-              stroke="hsl(43, 67%, 52%)"
+              stroke="#1F8A8A"
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#colorRevenue)"
               name="Revenue"
+              animationDuration={1500}
             />
             <Area
               type="monotone"
               dataKey="calls"
-              stroke="hsl(200, 50%, 50%)"
+              stroke="#2FA4A4"
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#colorCalls)"
-              name="AI Conversations"
+              name="AI Calls"
+              animationDuration={2000}
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
-      
-      <div className="flex justify-center gap-6 mt-4 pt-4 border-t border-white/5">
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-primary" />
-          <span className="text-sm text-muted-foreground">Revenue</span>
+
+      <div className="flex justify-start gap-8 mt-auto border-t border-border pt-6">
+        <div className="flex items-center gap-2 group cursor-pointer">
+          <div className="h-2 w-6 rounded-full bg-primary/20 border-primary/30 group-hover:bg-primary transition-colors duration-200" />
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold text-foreground">Revenue Saved</span>
+            <span className="text-[10px] font-medium text-muted-foreground">From successful bookings</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-info" />
-          <span className="text-sm text-muted-foreground">AI Conversations</span>
+        <div className="flex items-center gap-2 group cursor-pointer">
+          <div className="h-2 w-6 rounded-full bg-primary/20 border-primary/30 group-hover:bg-[#2FA4A4] transition-colors duration-200" />
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold text-foreground">Call Volume</span>
+            <span className="text-[10px] font-medium text-muted-foreground">Total patient interactions</span>
+          </div>
         </div>
       </div>
     </div>

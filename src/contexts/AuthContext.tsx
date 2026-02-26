@@ -30,7 +30,11 @@ interface AuthState {
 
 export interface AuthContextType extends AuthState {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: AuthError | null; session: Session | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+  ) => Promise<{ error: AuthError | null; session: Session | null }>;
   signInWithMagicLink: (email: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -50,11 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
     try {
       const { data, error } = await Promise.race([
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .maybeSingle(),
+        supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
         timeout<any>(PROFILE_FETCH_TIMEOUT_MS, 'Profile fetch timeout'),
       ]);
 
@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setAuthSession = useCallback((session: Session | null) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       user: session?.user ?? null,
       session,
@@ -83,13 +83,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hydrateProfileAsync = useCallback(
     async (userId: string) => {
       const profile = await fetchProfile(userId);
-      setState(prev => {
+      setState((prev) => {
         // Avoid writing a stale profile if user changed mid-flight
         if (prev.user?.id !== userId) return prev;
         return { ...prev, profile };
       });
     },
-    [fetchProfile]
+    [fetchProfile],
   );
 
   // Set up auth state listener FIRST, then check session
@@ -98,33 +98,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let initResolved = false;
 
     // Set up listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!isMounted) return;
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return;
 
-        // Resolve initialization as soon as we receive any auth state.
-        if (!initResolved) {
-          initResolved = true;
-          window.clearTimeout(timeoutId);
-        }
-
-        // Update global auth state immediately (do NOT block on profile)
-        setAuthSession(session);
-
-        // Hydrate profile in background
-        if (session?.user?.id) {
-          void hydrateProfileAsync(session.user.id);
-        } else {
-          setState(prev => ({ ...prev, profile: null }));
-        }
+      // Resolve initialization as soon as we receive any auth state.
+      if (!initResolved) {
+        initResolved = true;
+        window.clearTimeout(timeoutId);
       }
-    );
+
+      // Update global auth state immediately (do NOT block on profile)
+      setAuthSession(session);
+
+      // Hydrate profile in background
+      if (session?.user?.id) {
+        void hydrateProfileAsync(session.user.id);
+      } else {
+        setState((prev) => ({ ...prev, profile: null }));
+      }
+    });
 
     // Check for existing session (with timeout fallback so UI never gets stuck on Loading)
     const timeoutId = window.setTimeout(() => {
       if (!isMounted || initResolved) return;
       initResolved = true;
-      console.warn(`[auth] Init timeout after ${AUTH_INIT_TIMEOUT_MS}ms; falling back to logged-out state.`);
+      console.warn(
+        `[auth] Init timeout after ${AUTH_INIT_TIMEOUT_MS}ms; falling back to logged-out state.`,
+      );
       setState({
         user: null,
         session: null,
@@ -136,7 +138,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     (async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (!isMounted || initResolved) return;
         initResolved = true;
         window.clearTimeout(timeoutId);
@@ -216,12 +220,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshSession = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.refreshSession();
+    const {
+      data: { session },
+    } = await supabase.auth.refreshSession();
     setAuthSession(session);
     if (session?.user?.id) {
       void hydrateProfileAsync(session.user.id);
     } else {
-      setState(prev => ({ ...prev, profile: null }));
+      setState((prev) => ({ ...prev, profile: null }));
     }
   }, [hydrateProfileAsync, setAuthSession]);
 

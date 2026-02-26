@@ -49,7 +49,7 @@ export function useDashboardStats() {
         { data: calls },
         { data: todayAppointments },
         { data: escalatedCalls },
-        { data: analytics }
+        { data: analytics },
       ] = await Promise.all([
         // AI calls stats
         supabase
@@ -57,7 +57,7 @@ export function useDashboardStats() {
           .select('id, outcome, revenue_impact')
           .eq('clinic_id', currentClinic.id)
           .gte('created_at', thirtyDaysAgo.toISOString()),
-        
+
         // Today's appointments
         supabase
           .from('appointments')
@@ -65,7 +65,7 @@ export function useDashboardStats() {
           .eq('clinic_id', currentClinic.id)
           .gte('scheduled_at', startOfDay)
           .lte('scheduled_at', endOfDay),
-        
+
         // Escalated calls needing action
         supabase
           .from('ai_calls')
@@ -73,22 +73,22 @@ export function useDashboardStats() {
           .eq('clinic_id', currentClinic.id)
           .eq('outcome', 'action_needed')
           .eq('escalation_required', true),
-        
+
         // Analytics events for revenue
         supabase
           .from('analytics_events')
           .select('id, revenue_impact')
           .eq('clinic_id', currentClinic.id)
           .eq('event_type', 'revenue_saved')
-          .gte('created_at', thirtyDaysAgo.toISOString())
+          .gte('created_at', thirtyDaysAgo.toISOString()),
       ]);
 
       const callsList = calls || [];
       const totalCalls = callsList.length;
-      const confirmedCalls = callsList.filter(c => c.outcome === 'confirmed').length;
+      const confirmedCalls = callsList.filter((c) => c.outcome === 'confirmed').length;
       const revenueSaved = callsList.reduce((sum, c) => sum + (Number(c.revenue_impact) || 0), 0);
-      const missedPrevented = callsList.filter(c => 
-        c.outcome === 'confirmed' || c.outcome === 'rescheduled'
+      const missedPrevented = callsList.filter(
+        (c) => c.outcome === 'confirmed' || c.outcome === 'rescheduled',
       ).length;
 
       return {
@@ -123,23 +123,20 @@ export function useWeeklyStats() {
         const startOfDay = new Date(date.setHours(0, 0, 0, 0)).toISOString();
         const endOfDay = new Date(date.setHours(23, 59, 59, 999)).toISOString();
 
-        const [
-          { data: calls },
-          { data: appointments }
-        ] = await Promise.all([
+        const [{ data: calls }, { data: appointments }] = await Promise.all([
           supabase
             .from('ai_calls')
             .select('id, revenue_impact')
             .eq('clinic_id', currentClinic.id)
             .gte('created_at', startOfDay)
             .lte('created_at', endOfDay),
-          
+
           supabase
             .from('appointments')
             .select('id')
             .eq('clinic_id', currentClinic.id)
             .gte('scheduled_at', startOfDay)
-            .lte('scheduled_at', endOfDay)
+            .lte('scheduled_at', endOfDay),
         ]);
 
         const dayName = days[new Date(date).getDay()];
@@ -159,13 +156,22 @@ export function useWeeklyStats() {
   });
 }
 
-export type EventType = 'call_initiated' | 'call_completed' | 'appointment_confirmed' | 
-  'appointment_rescheduled' | 'appointment_cancelled' | 'appointment_missed' | 
-  'escalation_created' | 'task_created' | 'task_completed' | 'revenue_saved' | 
-  'patient_created' | 'staff_action';
+export type EventType =
+  | 'call_initiated'
+  | 'call_completed'
+  | 'appointment_confirmed'
+  | 'appointment_rescheduled'
+  | 'appointment_cancelled'
+  | 'appointment_missed'
+  | 'escalation_created'
+  | 'task_created'
+  | 'task_completed'
+  | 'revenue_saved'
+  | 'patient_created'
+  | 'staff_action';
 
-export function useAnalyticsEvents(options?: { 
-  eventType?: EventType; 
+export function useAnalyticsEvents(options?: {
+  eventType?: EventType;
   limit?: number;
   days?: number;
 }) {
@@ -181,14 +187,16 @@ export function useAnalyticsEvents(options?: {
 
       let queryBuilder = supabase
         .from('analytics_events')
-        .select(`
+        .select(
+          `
           *,
           patient:patients (
             id,
             first_name,
             last_name
           )
-        `)
+        `,
+        )
         .eq('clinic_id', currentClinic.id)
         .gte('created_at', daysAgo.toISOString())
         .order('created_at', { ascending: false });
@@ -210,22 +218,140 @@ export function useAnalyticsEvents(options?: {
   });
 }
 
+// --- CLINICAL DECISION INTELLIGENCE HOOKS ---
+
+export interface BehavioralInsight {
+  id: string;
+  patient_id: string;
+  detected_urgency: 'emergency' | 'soon' | 'routine' | 'low_priority';
+  detected_emotion:
+    | 'pain'
+    | 'fear'
+    | 'price_concern'
+    | 'casual'
+    | 'frustrated'
+    | 'confused'
+    | 'angry';
+  objection_detected: string;
+  ai_response_strategy: string;
+  booking_intent_score: number;
+  created_at: string;
+  patient: {
+    first_name: string;
+    last_name: string;
+  };
+}
+
+export function useBehavioralInsights(limit = 20) {
+  const { currentClinic } = useClinic();
+
+  return useQuery({
+    queryKey: ['behavioral_insights', currentClinic?.id, limit],
+    queryFn: async (): Promise<BehavioralInsight[]> => {
+      if (!currentClinic) return [];
+
+      const { data, error } = await supabase
+        .from('conversation_intent_logs')
+        .select(
+          `
+          *,
+          patient:patients (first_name, last_name)
+        `,
+        )
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      return data as any[];
+    },
+    enabled: !!currentClinic,
+  });
+}
+
+export function useStrategicMetrics() {
+  const { currentClinic } = useClinic();
+
+  return useQuery({
+    queryKey: ['strategic_metrics', currentClinic?.id],
+    queryFn: async () => {
+      if (!currentClinic)
+        return {
+          avgIntentScore: 0,
+          emergencyPriorityRate: 0,
+          revenueCaptured: 0,
+        };
+
+      const [{ data: intents }, { data: revenue }] = await Promise.all([
+        supabase.from('conversation_intent_logs').select('booking_intent_score, detected_urgency'),
+        supabase
+          .from('revenue_attribution')
+          .select('actual_value, estimated_value')
+          .eq('status', 'confirmed'),
+      ]);
+
+      const scores = intents?.map((i) => i.booking_intent_score) || [];
+      const avgIntentScore =
+        scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+
+      const emergencies = intents?.filter((i) => i.detected_urgency === 'emergency').length || 0;
+      const emergencyPriorityRate = intents?.length ? (emergencies / intents.length) * 100 : 0;
+
+      const revenueCaptured =
+        revenue?.reduce((sum, r) => sum + (Number(r.actual_value || r.estimated_value) || 0), 0) ||
+        0;
+
+      return {
+        avgIntentScore,
+        emergencyPriorityRate,
+        revenueCaptured,
+      };
+    },
+    enabled: !!currentClinic,
+  });
+}
+
+export function useLatencyMetrics(limit = 50) {
+  const { currentClinic } = useClinic();
+
+  return useQuery({
+    queryKey: ['latency_metrics', currentClinic?.id],
+    queryFn: async () => {
+      if (!currentClinic) return [];
+
+      const { data, error } = await supabase
+        .from('analytics_events')
+        .select('*')
+        .eq('clinic_id', currentClinic.id)
+        .eq('event_type', 'staff_action')
+        // Filter by JSON field 'action' == 'latency_metric'
+        .contains('event_data', { action: 'latency_metric' })
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!currentClinic,
+    refetchInterval: 5000, // Live updates
+  });
+}
+
 // Alias for backwards compatibility
 export function useAnalytics() {
   const { currentClinic } = useClinic();
-  
+
   const query = useQuery({
     queryKey: ['analytics', currentClinic?.id],
     queryFn: async () => {
       if (!currentClinic) return [];
-      
+
       const { data, error } = await supabase
         .from('analytics_events')
         .select('*')
         .eq('clinic_id', currentClinic.id)
         .order('created_at', { ascending: false })
         .limit(100);
-      
+
       if (error) throw error;
       return data;
     },

@@ -1,6 +1,5 @@
 import { Router } from 'express';
-import { supabase } from '../lib/supabase';
-import { logger } from '../lib/logger';
+import { logger } from '../lib/logging/structured-logger';
 import { logAuditEvent } from '../lib/audit-logger';
 
 const router = Router();
@@ -8,53 +7,55 @@ const router = Router();
 /**
  * POST /v1/automation/pause
  * Pause all automation for a clinic
+ * SECURITY: Uses req.supabaseUser (RLS-respecting) and req.clinicId (trusted from middleware)
  */
 router.post('/pause', async (req, res) => {
-    const { clinic_id, user_id, reason } = req.body;
+  const clinicId = req.clinicId; // TRUSTED: from requireClinicAccess middleware
+  const userId = req.user?.sub;  // TRUSTED: from requireAuth middleware
+  const { reason } = req.body;
 
-    if (!clinic_id) {
-        return res.status(400).json({ error: 'clinic_id is required' });
+  if (!clinicId) {
+    return res.status(400).json({ error: 'Missing clinic context' });
+  }
+
+  try {
+    const { error } = await req.supabaseUser!
+      .from('clinics')
+      .update({
+        automation_paused: true,
+        automation_paused_at: new Date().toISOString(),
+        automation_paused_by: userId || null,
+      })
+      .eq('id', clinicId);
+
+    if (error) {
+      logger.error('Failed to pause automation', { clinicId, error: error.message });
+      return res.status(500).json({ error: 'Failed to pause automation' });
     }
 
-    try {
-        const { error } = await supabase
-            .from('clinics')
-            .update({
-                automation_paused: true,
-                automation_paused_at: new Date().toISOString(),
-                automation_paused_by: user_id || null
-            })
-            .eq('id', clinic_id);
+    // Log to immutable audit log
+    await logAuditEvent({
+      clinicId,
+      eventType: 'automation.paused',
+      actorId: userId,
+      actorType: userId ? 'user' : 'system',
+      resourceType: 'clinic',
+      resourceId: clinicId,
+      action: 'update',
+      details: { reason: reason || 'Manual pause requested' },
+    });
 
-        if (error) {
-            logger.error('Failed to pause automation', { clinicId: clinic_id, error: error.message });
-            return res.status(500).json({ error: 'Failed to pause automation' });
-        }
+    logger.info('Automation paused', { clinicId, userId });
 
-        // Log to immutable audit log
-        await logAuditEvent({
-            clinicId: clinic_id,
-            eventType: 'automation.paused',
-            actorId: user_id,
-            actorType: user_id ? 'user' : 'system',
-            resourceType: 'clinic',
-            resourceId: clinic_id,
-            action: 'update',
-            details: { reason: reason || 'Manual pause requested' }
-        });
-
-        logger.info('Automation paused', { clinicId: clinic_id, userId: user_id });
-
-        return res.json({
-            success: true,
-            message: 'Automation paused for clinic',
-            paused_at: new Date().toISOString()
-        });
-
-    } catch (error) {
-        logger.error('Pause automation failed', { error: (error as Error).message });
-        res.status(500).json({ error: 'Internal server error' });
-    }
+    return res.json({
+      success: true,
+      message: 'Automation paused for clinic',
+      paused_at: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Pause automation failed', { error: (error as Error).message });
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 /**
@@ -62,82 +63,85 @@ router.post('/pause', async (req, res) => {
  * Resume automation for a clinic
  */
 router.post('/resume', async (req, res) => {
-    const { clinic_id, user_id } = req.body;
+  const clinicId = req.clinicId; // TRUSTED
+  const userId = req.user?.sub;  // TRUSTED
 
-    if (!clinic_id) {
-        return res.status(400).json({ error: 'clinic_id is required' });
+  if (!clinicId) {
+    return res.status(400).json({ error: 'Missing clinic context' });
+  }
+
+  try {
+    const { error } = await req.supabaseUser!
+      .from('clinics')
+      .update({
+        automation_paused: false,
+        automation_paused_at: null,
+        automation_paused_by: null,
+      })
+      .eq('id', clinicId);
+
+    if (error) {
+      logger.error('Failed to resume automation', { clinicId, error: error.message });
+      return res.status(500).json({ error: 'Failed to resume automation' });
     }
 
-    try {
-        const { error } = await supabase
-            .from('clinics')
-            .update({
-                automation_paused: false,
-                automation_paused_at: null,
-                automation_paused_by: null
-            })
-            .eq('id', clinic_id);
+    await logAuditEvent({
+      clinicId,
+      eventType: 'automation.resumed',
+      actorId: userId,
+      actorType: userId ? 'user' : 'system',
+      resourceType: 'clinic',
+      resourceId: clinicId,
+      action: 'update',
+      details: {},
+    });
 
-        if (error) {
-            logger.error('Failed to resume automation', { clinicId: clinic_id, error: error.message });
-            return res.status(500).json({ error: 'Failed to resume automation' });
-        }
+    logger.info('Automation resumed', { clinicId, userId });
 
-        // Log to immutable audit log
-        await logAuditEvent({
-            clinicId: clinic_id,
-            eventType: 'automation.resumed',
-            actorId: user_id,
-            actorType: user_id ? 'user' : 'system',
-            resourceType: 'clinic',
-            resourceId: clinic_id,
-            action: 'update',
-            details: {}
-        });
-
-        logger.info('Automation resumed', { clinicId: clinic_id, userId: user_id });
-
-        return res.json({
-            success: true,
-            message: 'Automation resumed for clinic'
-        });
-
-    } catch (error) {
-        logger.error('Resume automation failed', { error: (error as Error).message });
-        res.status(500).json({ error: 'Internal server error' });
-    }
+    return res.json({
+      success: true,
+      message: 'Automation resumed for clinic',
+    });
+  } catch (error) {
+    logger.error('Resume automation failed', { error: (error as Error).message });
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 /**
- * GET /v1/automation/status/:clinic_id
- * Get automation status for a clinic
+ * GET /v1/automation/status
+ * Get automation status for the authenticated user's clinic
+ * CHANGED: No longer accepts clinic_id from URL params (IDOR risk)
  */
-router.get('/status/:clinic_id', async (req, res) => {
-    const { clinic_id } = req.params;
+router.get('/status', async (req, res) => {
+  const clinicId = req.clinicId; // TRUSTED
 
-    try {
-        const { data: clinic, error } = await supabase
-            .from('clinics')
-            .select('automation_paused, automation_paused_at, automation_paused_by, ai_settings')
-            .eq('id', clinic_id)
-            .single();
+  if (!clinicId) {
+    return res.status(400).json({ error: 'Missing clinic context' });
+  }
 
-        if (error || !clinic) {
-            return res.status(404).json({ error: 'Clinic not found' });
-        }
+  try {
+    const { data: clinic, error } = await req.supabaseUser!
+      .from('clinics')
+      .select('automation_paused, automation_paused_at, automation_paused_by, ai_settings')
+      .eq('id', clinicId)
+      .single();
 
-        return res.json({
-            clinic_id,
-            automation_paused: clinic.automation_paused || false,
-            paused_at: clinic.automation_paused_at,
-            paused_by: clinic.automation_paused_by,
-            ai_settings: clinic.ai_settings
-        });
-
-    } catch (error) {
-        logger.error('Get automation status failed', { error: (error as Error).message });
-        res.status(500).json({ error: 'Internal server error' });
+    if (error || !clinic) {
+      return res.status(404).json({ error: 'Clinic not found' });
     }
+
+    return res.json({
+      clinic_id: clinicId,
+      automation_paused: clinic.automation_paused || false,
+      paused_at: clinic.automation_paused_at,
+      paused_by: clinic.automation_paused_by,
+      ai_settings: clinic.ai_settings,
+    });
+  } catch (error) {
+    logger.error('Get automation status failed', { error: (error as Error).message });
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 export default router;

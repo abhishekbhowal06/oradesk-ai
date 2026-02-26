@@ -8,12 +8,7 @@ interface SystemTooltipProps {
   className?: string;
 }
 
-export function SystemTooltip({
-  children,
-  content,
-  side = 'top',
-  className,
-}: SystemTooltipProps) {
+export function SystemTooltip({ children, content, side = 'top', className }: SystemTooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   const positionClasses = {
@@ -37,7 +32,7 @@ export function SystemTooltip({
             'bg-popover border border-white/10 shadow-xl',
             'text-sm text-foreground whitespace-nowrap',
             'animate-fade-up',
-            positionClasses[side]
+            positionClasses[side],
           )}
         >
           {content}

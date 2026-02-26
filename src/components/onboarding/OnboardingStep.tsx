@@ -8,34 +8,35 @@ interface OnboardingStepProps {
   className?: string;
 }
 
-export function OnboardingStep({ currentStep, totalSteps, children, className }: OnboardingStepProps) {
+export function OnboardingStep({
+  currentStep,
+  totalSteps,
+  children,
+  className,
+}: OnboardingStepProps) {
   return (
-    <div className={cn("w-full max-w-2xl mx-auto space-y-8 animate-fade-up", className)}>
-      {/* Progress Indicator */}
-      <div className="flex items-center justify-center gap-2">
-        <span className="text-sm text-muted-foreground">
-          Step {currentStep} of {totalSteps}
-        </span>
-        <div className="flex items-center gap-1.5 ml-3">
-          {Array.from({ length: totalSteps }).map((_, index) => (
-            <div
-              key={index}
-              className={cn(
-                "h-2 rounded-full transition-all duration-300",
-                index + 1 === currentStep
-                  ? "w-8 bg-primary"
-                  : index + 1 < currentStep
-                  ? "w-2 bg-primary/60"
-                  : "w-2 bg-white/20"
-              )}
-            />
-          ))}
+    <div className={cn('w-full space-y-8 animate-fade-up', className)}>
+      <div className="bg-[#051a1e] border border-white/10 p-0 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
+        {/* Terminal Header */}
+        <div className="bg-white/5 border-b border-white/10 px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 bg-primary rounded-none rotate-45" />
+            <span className="text-[10px] font-mono font-bold text-white uppercase tracking-widest">WIZARD_PROTOCOL::{currentStep}/{totalSteps}</span>
+          </div>
+          <div className="flex gap-1">
+            <div className="h-1 w-4 bg-primary/20" />
+            <div className="h-1 w-4 bg-primary/20" />
+            <div className="h-1 w-4 bg-primary" />
+          </div>
         </div>
-      </div>
 
-      {/* Step Content */}
-      <div className="glass-card p-8">
-        {children}
+        {/* Main Content Area */}
+        <div className="p-10">
+          {children}
+        </div>
+
+        {/* Bottom Accent */}
+        <div className="h-1 w-full bg-stripe-pattern opacity-10" />
       </div>
     </div>
   );

@@ -12,43 +12,43 @@ console.log('='.repeat(60) + '\n');
 
 // Phase summaries
 const phases = [
-    {
-        number: 1,
-        name: 'Audio Pipeline Transformation',
-        eliminated: 5000,
-        mechanism: 'Removed Gather timeout, streaming WebSocket audio',
-        status: '✅ COMPLETE',
-        tests: ['WebSocket connection < 100ms', 'Frame processing < 10ms']
-    },
-    {
-        number: 2,
-        name: 'Early Intent Engine',
-        eliminated: 3400,
-        mechanism: 'Pattern matching bypasses Gemini for simple intents',
-        status: '✅ COMPLETE',
-        tests: ['"yes" match in <1ms', 'No false positives', '99.9% reduction vs Gemini']
-    },
-    {
-        number: 3,
-        name: 'Interruptible Speech (Streaming TTS)',
-        eliminated: 1300,
-        mechanism: 'Chunked TTS delivery, instant cancellation',
-        status: '✅ COMPLETE',
-        tests: ['First chunk < 200ms', 'Interrupt < 100ms', 'Mid-sentence cancel']
-    }
+  {
+    number: 1,
+    name: 'Audio Pipeline Transformation',
+    eliminated: 5000,
+    mechanism: 'Removed Gather timeout, streaming WebSocket audio',
+    status: '✅ COMPLETE',
+    tests: ['WebSocket connection < 100ms', 'Frame processing < 10ms'],
+  },
+  {
+    number: 2,
+    name: 'Early Intent Engine',
+    eliminated: 3400,
+    mechanism: 'Pattern matching bypasses Gemini for simple intents',
+    status: '✅ COMPLETE',
+    tests: ['"yes" match in <1ms', 'No false positives', '99.9% reduction vs Gemini'],
+  },
+  {
+    number: 3,
+    name: 'Interruptible Speech (Streaming TTS)',
+    eliminated: 1300,
+    mechanism: 'Chunked TTS delivery, instant cancellation',
+    status: '✅ COMPLETE',
+    tests: ['First chunk < 200ms', 'Interrupt < 100ms', 'Mid-sentence cancel'],
+  },
 ];
 
 let totalEliminated = 0;
 
-phases.forEach(phase => {
-    console.log(`PHASE ${phase.number}: ${phase.name}`);
-    console.log(`  Status: ${phase.status}`);
-    console.log(`  Latency Eliminated: ${phase.eliminated}ms`);
-    console.log(`  Mechanism: ${phase.mechanism}`);
-    console.log(`  Key Tests:`);
-    phase.tests.forEach(test => console.log(`    - ${test}`));
-    console.log('');
-    totalEliminated += phase.eliminated;
+phases.forEach((phase) => {
+  console.log(`PHASE ${phase.number}: ${phase.name}`);
+  console.log(`  Status: ${phase.status}`);
+  console.log(`  Latency Eliminated: ${phase.eliminated}ms`);
+  console.log(`  Mechanism: ${phase.mechanism}`);
+  console.log(`  Key Tests:`);
+  phase.tests.forEach((test) => console.log(`    - ${test}`));
+  console.log('');
+  totalEliminated += phase.eliminated;
 });
 
 console.log('='.repeat(60));
@@ -72,7 +72,7 @@ console.log('    → Total: ~250ms ✅\n');
 
 const oldLatency = 10000;
 const newLatency = 250;
-const improvement = ((oldLatency - newLatency) / oldLatency * 100).toFixed(1);
+const improvement = (((oldLatency - newLatency) / oldLatency) * 100).toFixed(1);
 
 console.log(`IMPROVEMENT: ${improvement}% latency reduction\n`);
 
@@ -104,13 +104,13 @@ console.log('='.repeat(60));
 console.log('CODE CHANGES:\n');
 
 const files = [
-    'services/ai-calling/src/routes/webhooks.ts',
-    'services/ai-calling/src/lib/stream-handler.ts',
-    'services/ai-calling/src/lib/realtime-conversation.ts',
-    'services/ai-calling/src/index.ts'
+  'services/ai-calling/src/routes/webhooks.ts',
+  'services/ai-calling/src/lib/stream-handler.ts',
+  'services/ai-calling/src/lib/realtime-conversation.ts',
+  'services/ai-calling/src/index.ts',
 ];
 
-files.forEach(file => console.log(`  - ${file}`));
+files.forEach((file) => console.log(`  - ${file}`));
 
 console.log('\n' + '='.repeat(60));
 console.log('NEXT STEPS:\n');

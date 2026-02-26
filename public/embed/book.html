@@ -1,289 +1,299 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Request Appointment</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: transparent;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+      body {
+        font-family:
+          'Inter',
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: transparent;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
 
-        .widget {
-            background: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-            padding: 32px;
-            width: 100%;
-            max-width: 400px;
-            border: 1px solid #e5e7eb;
-        }
+      .widget {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        padding: 32px;
+        width: 100%;
+        max-width: 400px;
+        border: 1px solid #e5e7eb;
+      }
 
-        .widget-header {
-            margin-bottom: 24px;
-            text-align: center;
-        }
+      .widget-header {
+        margin-bottom: 24px;
+        text-align: center;
+      }
 
-        .widget-header h1 {
-            font-size: 20px;
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 8px;
-        }
+      .widget-header h1 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 8px;
+      }
 
-        .widget-header p {
-            font-size: 14px;
-            color: #6b7280;
-        }
+      .widget-header p {
+        font-size: 14px;
+        color: #6b7280;
+      }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+      .form-group {
+        margin-bottom: 20px;
+      }
 
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 6px;
-        }
+      .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 6px;
+      }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 14px;
-            font-size: 15px;
-            font-family: inherit;
-            border: 1px solid #d1d5db;
-            border-radius: 10px;
-            background: #f9fafb;
-            transition: all 0.2s ease;
-        }
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 12px 14px;
+        font-size: 15px;
+        font-family: inherit;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        background: #f9fafb;
+        transition: all 0.2s ease;
+      }
 
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #0d9488;
-            background: #ffffff;
-            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
-        }
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #0d9488;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+      }
 
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
+      .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
 
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
 
-        .submit-btn {
-            width: 100%;
-            padding: 14px 24px;
-            font-size: 15px;
-            font-weight: 600;
-            font-family: inherit;
-            color: #ffffff;
-            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
+      .submit-btn {
+        width: 100%;
+        padding: 14px 24px;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: inherit;
+        color: #ffffff;
+        background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
 
-        .submit-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
-        }
+      .submit-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+      }
 
-        .submit-btn:active {
-            transform: scale(0.98);
-        }
+      .submit-btn:active {
+        transform: scale(0.98);
+      }
 
-        .submit-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
-        }
+      .submit-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+      }
 
-        .success-message {
-            display: none;
-            text-align: center;
-            padding: 24px;
-        }
+      .success-message {
+        display: none;
+        text-align: center;
+        padding: 24px;
+      }
 
-        .success-message.show {
-            display: block;
-        }
+      .success-message.show {
+        display: block;
+      }
 
-        .success-icon {
-            width: 48px;
-            height: 48px;
-            background: #d1fae5;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 16px;
-        }
+      .success-icon {
+        width: 48px;
+        height: 48px;
+        background: #d1fae5;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+      }
 
-        .success-icon svg {
-            width: 24px;
-            height: 24px;
-            color: #059669;
-        }
+      .success-icon svg {
+        width: 24px;
+        height: 24px;
+        color: #059669;
+      }
 
-        .success-message h2 {
-            font-size: 18px;
-            color: #111827;
-            margin-bottom: 8px;
-        }
+      .success-message h2 {
+        font-size: 18px;
+        color: #111827;
+        margin-bottom: 8px;
+      }
 
-        .success-message p {
-            font-size: 14px;
-            color: #6b7280;
-        }
+      .success-message p {
+        font-size: 14px;
+        color: #6b7280;
+      }
 
-        .form-content.hidden {
-            display: none;
-        }
+      .form-content.hidden {
+        display: none;
+      }
 
-        .footer {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 11px;
-            color: #9ca3af;
-        }
+      .footer {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 11px;
+        color: #9ca3af;
+      }
 
-        .footer a {
-            color: #6b7280;
-            text-decoration: none;
-        }
+      .footer a {
+        color: #6b7280;
+        text-decoration: none;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="widget">
-        <div class="widget-header">
-            <h1>Request an Appointment</h1>
-            <p>We'll confirm your appointment within 2 hours</p>
+      <div class="widget-header">
+        <h1>Request an Appointment</h1>
+        <p>We'll confirm your appointment within 2 hours</p>
+      </div>
+
+      <form id="appointmentForm" class="form-content">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" name="firstName" required placeholder="John" />
+          </div>
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" name="lastName" required placeholder="Smith" />
+          </div>
         </div>
 
-        <form id="appointmentForm" class="form-content">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="firstName">First Name</label>
-                    <input type="text" id="firstName" name="firstName" required placeholder="John">
-                </div>
-                <div class="form-group">
-                    <label for="lastName">Last Name</label>
-                    <input type="text" id="lastName" name="lastName" required placeholder="Smith">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" name="phone" required placeholder="(555) 123-4567">
-            </div>
-
-            <div class="form-group">
-                <label for="reason">Reason for Visit</label>
-                <select id="reason" name="reason" required>
-                    <option value="">Select a reason...</option>
-                    <option value="cleaning">Cleaning & Checkup</option>
-                    <option value="pain">Tooth Pain / Emergency</option>
-                    <option value="cosmetic">Cosmetic Consultation</option>
-                    <option value="followup">Follow-up Visit</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="notes">Additional Notes (Optional)</label>
-                <textarea id="notes" name="notes" placeholder="Any details you'd like us to know..."></textarea>
-            </div>
-
-            <button type="submit" class="submit-btn" id="submitBtn">
-                Request Appointment
-            </button>
-        </form>
-
-        <div class="success-message" id="successMessage">
-            <div class="success-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-            </div>
-            <h2>Request Received</h2>
-            <p>We'll call you shortly to confirm your appointment.</p>
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" name="phone" required placeholder="(555) 123-4567" />
         </div>
 
-        <div class="footer">
-            Secured by <a href="#">Dentacore</a>
+        <div class="form-group">
+          <label for="reason">Reason for Visit</label>
+          <select id="reason" name="reason" required>
+            <option value="">Select a reason...</option>
+            <option value="cleaning">Cleaning & Checkup</option>
+            <option value="pain">Tooth Pain / Emergency</option>
+            <option value="cosmetic">Cosmetic Consultation</option>
+            <option value="followup">Follow-up Visit</option>
+            <option value="other">Other</option>
+          </select>
         </div>
+
+        <div class="form-group">
+          <label for="notes">Additional Notes (Optional)</label>
+          <textarea
+            id="notes"
+            name="notes"
+            placeholder="Any details you'd like us to know..."
+          ></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Request Appointment</button>
+      </form>
+
+      <div class="success-message" id="successMessage">
+        <div class="success-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            ></path>
+          </svg>
+        </div>
+        <h2>Request Received</h2>
+        <p>We'll call you shortly to confirm your appointment.</p>
+      </div>
+
+      <div class="footer">Secured by <a href="#">Dentacore</a></div>
     </div>
 
     <script>
-        const API_URL = window.DENTACORE_API_URL || 'http://localhost:8080';
-        const CLINIC_ID = window.DENTACORE_CLINIC_ID || '';
+      const API_URL = window.DENTACORE_API_URL || 'http://localhost:8080';
+      const CLINIC_ID = window.DENTACORE_CLINIC_ID || '';
 
-        document.getElementById('appointmentForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+      document.getElementById('appointmentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.textContent = 'Submitting...';
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
 
-            const formData = {
-                first_name: document.getElementById('firstName').value,
-                last_name: document.getElementById('lastName').value,
-                phone: document.getElementById('phone').value,
-                reason: document.getElementById('reason').value,
-                notes: document.getElementById('notes').value,
-                clinic_id: CLINIC_ID
-            };
+        const formData = {
+          first_name: document.getElementById('firstName').value,
+          last_name: document.getElementById('lastName').value,
+          phone: document.getElementById('phone').value,
+          reason: document.getElementById('reason').value,
+          notes: document.getElementById('notes').value,
+          clinic_id: CLINIC_ID,
+        };
 
-            try {
-                const response = await fetch(`${API_URL}/v1/appointments/request`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
+        try {
+          const response = await fetch(`${API_URL}/v1/appointments/request`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+          });
 
-                if (response.ok) {
-                    document.querySelector('.form-content').classList.add('hidden');
-                    document.getElementById('successMessage').classList.add('show');
-                } else {
-                    throw new Error('Failed to submit');
-                }
-            } catch (error) {
-                alert('Something didn\'t work. Please try again or call us directly.');
-                btn.disabled = false;
-                btn.textContent = 'Request Appointment';
-            }
-        });
+          if (response.ok) {
+            document.querySelector('.form-content').classList.add('hidden');
+            document.getElementById('successMessage').classList.add('show');
+          } else {
+            throw new Error('Failed to submit');
+          }
+        } catch (error) {
+          alert("Something didn't work. Please try again or call us directly.");
+          btn.disabled = false;
+          btn.textContent = 'Request Appointment';
+        }
+      });
     </script>
-</body>
-
+  </body>
 </html>

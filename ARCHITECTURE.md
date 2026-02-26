@@ -12,12 +12,12 @@ graph TD
     Client[React Client] -->|Trigger| API[Cloud Run API]
     API -->|Create Record| Supabase[(Supabase DB)]
     API -->|Initiate Call| Twilio[Twilio Voice]
-    
+
     Twilio -->|Webhook (Voice)| API
     API -->|Analyze Intent| Gemini[Gemini 3 Pro]
     Gemini -->|Action| API
     API -->|TwiML| Twilio
-    
+
     Scheduler[Cloud Scheduler] -->|Cron| API
     API -->|Check Follow-ups| Supabase
 ```
@@ -27,24 +27,26 @@ graph TD
 - **Cloud Run**: Hosts the `dentacore-ai-calling` service. Autoscaling (0 to N).
 - **Cloud Scheduler**: Triggers `/cron/process-followups` every 5 minutes.
 - **Secret Manager**:
-    - `SUPABASE_URL`
-    - `SUPABASE_SERVICE_ROLE_KEY`
-    - `TWILIO_ACCOUNT_SID`
-    - `TWILIO_AUTH_TOKEN`
-    - `TWILIO_PHONE_NUMBER`
-    - `GEMINI_API_KEY`
+  - `SUPABASE_URL`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `TWILIO_ACCOUNT_SID`
+  - `TWILIO_AUTH_TOKEN`
+  - `TWILIO_PHONE_NUMBER`
+  - `GEMINI_API_KEY`
 
 ## Services
 
 ### 1. `dentacore-ai-calling` (Node.js/TypeScript)
 
 **Responsibility**:
+
 - Handle outbound call requests.
 - Handle Inbound interactions (IVR).
 - Manage call state consistency.
 - Integrate Gemini for NLU (Natural Language Understanding).
 
 **Endpoints**:
+
 - `POST /v1/calls/outbound`: Initiate confirmation/reminder call.
 - `POST /v1/webhooks/twilio/voice`: Main TwiML loop.
 - `POST /v1/webhooks/twilio/status`: Call status updates (completed, failed).
@@ -78,6 +80,7 @@ graph TD
 **Model**: `gemini-1.5-pro` (or latest '3' if available/referenced).
 
 **Prompt Engineering**:
+
 - **Role**: "You are a dental receptionist assistant."
 - **Constraint**: "You cannot take medical advice. You verify appointments."
 - **Output**: JSON only. `{ "intent": "confirm" | "reschedule" | "cancel" | "unknown", "response_text": "...", "confidence": 0-100 }`.

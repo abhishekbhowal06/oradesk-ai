@@ -23,7 +23,7 @@ export function EscalationFlag({
         className={cn(
           'flex items-center gap-2 px-3 py-2 rounded-xl',
           'bg-info/10 border border-info/20',
-          className
+          className,
         )}
       >
         <UserPlus className="h-4 w-4 text-info" />
@@ -39,7 +39,7 @@ export function EscalationFlag({
     <div
       className={cn(
         'rounded-xl border border-destructive/20 bg-destructive/5 overflow-hidden',
-        className
+        className,
       )}
     >
       <div className="flex items-start gap-3 p-3">
@@ -56,7 +56,7 @@ export function EscalationFlag({
             'w-full flex items-center justify-center gap-2 py-2.5 px-3',
             'text-xs font-medium text-foreground',
             'bg-white/[0.03] hover:bg-white/[0.06] transition-colors',
-            'border-t border-white/5'
+            'border-t border-white/5',
           )}
         >
           <UserPlus className="h-3.5 w-3.5" />

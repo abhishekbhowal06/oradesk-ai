@@ -38,27 +38,27 @@ This guide is for IT administrators and operations staff responsible for deployi
 
 ### Required for Production
 
-| Variable | Purpose | Example |
-|----------|---------|---------|
-| `PORT` | Backend server port | `3001` |
-| `SERVICE_URL` | Public webhook URL | `https://api.dentacore.com` |
-| `SUPABASE_URL` | Supabase project URL | `https://xxx.supabase.co` |
-| `SUPABASE_ANON_KEY` | Supabase public key | `eyJhbGc...` |
-| `SUPABASE_SERVICE_KEY` | Supabase admin key | `eyJhbGc...` (SECRET) |
-| `TWILIO_ACCOUNT_SID` | Twilio account ID | `ACxxx...` |
-| `TWILIO_AUTH_TOKEN` | Twilio auth token | `xxx...` (SECRET) |
-| `TWILIO_PHONE_NUMBER` | Outbound caller ID | `+15551234567` |
-| `GEMINI_API_KEY` | Google AI key | `AIza...` (SECRET) |
-| `DEEPGRAM_API_KEY` | Speech-to-text key | `xxx...` (SECRET, optional) |
-| `CLINIC_ESCALATION_PHONE` | Emergency transfer number | `+15559999999` (optional) |
+| Variable                  | Purpose                   | Example                     |
+| ------------------------- | ------------------------- | --------------------------- |
+| `PORT`                    | Backend server port       | `3001`                      |
+| `SERVICE_URL`             | Public webhook URL        | `https://api.dentacore.com` |
+| `SUPABASE_URL`            | Supabase project URL      | `https://xxx.supabase.co`   |
+| `SUPABASE_ANON_KEY`       | Supabase public key       | `eyJhbGc...`                |
+| `SUPABASE_SERVICE_KEY`    | Supabase admin key        | `eyJhbGc...` (SECRET)       |
+| `TWILIO_ACCOUNT_SID`      | Twilio account ID         | `ACxxx...`                  |
+| `TWILIO_AUTH_TOKEN`       | Twilio auth token         | `xxx...` (SECRET)           |
+| `TWILIO_PHONE_NUMBER`     | Outbound caller ID        | `+15551234567`              |
+| `GEMINI_API_KEY`          | Google AI key             | `AIza...` (SECRET)          |
+| `DEEPGRAM_API_KEY`        | Speech-to-text key        | `xxx...` (SECRET, optional) |
+| `CLINIC_ESCALATION_PHONE` | Emergency transfer number | `+15559999999` (optional)   |
 
 ### Optional (Advanced)
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `LOG_LEVEL` | `info` | Logging verbosity (debug, info, warn, error) |
-| `MAX_CONCURRENT_CALLS` | `50` | Circuit breaker threshold |
-| `OPS_MONITOR_INTERVAL_MS` | `300000` | Health check interval (5 min) |
+| Variable                  | Default  | Purpose                                      |
+| ------------------------- | -------- | -------------------------------------------- |
+| `LOG_LEVEL`               | `info`   | Logging verbosity (debug, info, warn, error) |
+| `MAX_CONCURRENT_CALLS`    | `50`     | Circuit breaker threshold                    |
+| `OPS_MONITOR_INTERVAL_MS` | `300000` | Health check interval (5 min)                |
 
 ---
 
@@ -120,11 +120,13 @@ npm start  # Runs on PORT from .env
 ### Operational Endpoints
 
 #### System Health
+
 ```bash
 GET /api/v1/ops/system-status
 ```
 
 Returns overall system health:
+
 ```json
 {
   "healthy": true,
@@ -136,6 +138,7 @@ Returns overall system health:
 ```
 
 #### Clinic Health
+
 ```bash
 GET /api/v1/ops/health/:clinicId
 ```
@@ -143,6 +146,7 @@ GET /api/v1/ops/health/:clinicId
 Returns clinic-specific operational signals.
 
 #### Incident Playbooks
+
 ```bash
 GET /api/v1/ops/playbook/:scenario
 # Scenarios: twilio_down, database_slow, patient_angry
@@ -153,6 +157,7 @@ GET /api/v1/ops/playbook/:scenario
 **Location:** `services/ai-calling/logs/` (if file logging enabled)
 
 **Structure (JSON):**
+
 ```json
 {
   "timestamp": "2026-02-06T14:00:00Z",
@@ -164,6 +169,7 @@ GET /api/v1/ops/playbook/:scenario
 ```
 
 **Key log messages:**
+
 - `"Call initiated"` - Outbound call started
 - `"Emergency detected"` - Patient used emergency phrase
 - `"Circuit breaker opened"` - System overloaded
@@ -178,12 +184,14 @@ GET /api/v1/ops/playbook/:scenario
 **Symptoms:** `/v1/outbound/initiate` returns 403 or 500
 
 **Checks:**
+
 1. Verify `TWILIO_PHONE_NUMBER` is set
 2. Check Twilio account balance
 3. Verify clinic automation is enabled: `SELECT ai_confirmation_enabled FROM clinics WHERE id = ?`
 4. Check patient consent: `SELECT * FROM patient_consent WHERE patient_id = ?`
 
 **Resolution:**
+
 ```sql
 -- Enable automation
 UPDATE clinics SET ai_confirmation_enabled = true WHERE id = 'xxx';
@@ -199,15 +207,17 @@ INSERT INTO patient_consent (patient_id, consent_granted) VALUES ('xxx', true);
 **Symptoms:** >20% of calls escalate to staff
 
 **Checks:**
+
 ```sql
-SELECT escalation_reason, COUNT(*) 
-FROM ai_calls 
+SELECT escalation_reason, COUNT(*)
+FROM ai_calls
 WHERE created_at > now() - interval '7 days'
   AND escalation_required = true
 GROUP BY escalation_reason;
 ```
 
 **Common causes:**
+
 - `silence` - Phone not answering → Review timing/retry logic
 - `ambiguous` - AI unsure → Refine prompts or lower confidence threshold
 - `emergency_phrase` - Patients using keywords → Expected behavior
@@ -219,11 +229,13 @@ GROUP BY escalation_reason;
 **Symptoms:** Calls connect but AI doesn't respond
 
 **Checks:**
+
 1. Verify `SERVICE_URL` is publicly accessible
 2. Check Twilio webhook logs in Twilio Console
 3. Verify SSL certificate is valid
 
 **Debug:**
+
 ```bash
 # Test webhook endpoint
 curl https://your-service-url.com/v1/webhooks/twilio/voice?call_id=test
@@ -238,6 +250,7 @@ curl https://your-service-url.com/v1/webhooks/twilio/voice?call_id=test
 **Symptoms:** `Error: Supabase client failed`
 
 **Resolution:**
+
 1. Check Supabase project status
 2. Verify `SUPABASE_URL` and `SUPABASE_SERVICE_KEY`
 3. Check network connectivity
@@ -262,6 +275,7 @@ curl https://your-service-url.com/v1/webhooks/twilio/voice?call_id=test
 ### Database Indexes
 
 Ensure these indexes exist:
+
 ```sql
 CREATE INDEX idx_ai_calls_clinic_id ON ai_calls(clinic_id);
 CREATE INDEX idx_ai_calls_created_at ON ai_calls(created_at DESC);
@@ -271,6 +285,7 @@ CREATE INDEX idx_ai_calls_escalation ON ai_calls(escalation_required) WHERE esca
 ### Caching
 
 Consider adding Redis for:
+
 - Clinic settings cache (TTL 5 min)
 - Patient consent cache (TTL 10 min)
 - Health check results (TTL 30 sec)
@@ -288,6 +303,7 @@ Consider adding Redis for:
 ### Database Backups
 
 Supabase provides automatic daily backups. Manual backup:
+
 ```bash
 # Export critical tables
 supabase db dump --data-only > backup.sql
@@ -302,6 +318,7 @@ Store `.env` securely in secrets manager (AWS Secrets Manager, Google Secret Man
 ## Monitoring Dashboard (Future)
 
 Recommended metrics to track:
+
 - Call success rate (target >80%)
 - Escalation rate (target <15%)
 - Average call duration

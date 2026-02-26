@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Briefcase, Smile, Heart, Volume2, Play, Globe, Gauge } from 'lucide-react';
+import { Briefcase, Smile, Heart, Volume2, Play, Globe, Gauge, Zap, Activity, Cpu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -25,29 +25,29 @@ interface AIPersonalitySettingsProps {
 }
 
 const VOICE_OPTIONS = [
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', description: 'Professional Female' },
-  { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George', description: 'Warm Male' },
-  { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily', description: 'Friendly Female' },
-  { id: 'nPczCjzI2devNBz1zQrb', name: 'Brian', description: 'Calm Male' },
-  { id: 'cgSgspJ2msm6clMCkdW9', name: 'Jessica', description: 'Energetic Female' },
+  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'SARAH_v4', description: 'Professional Female' },
+  { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'GEORGE_v2', description: 'Warm Male' },
+  { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'LILY_v3', description: 'Friendly Female' },
+  { id: 'nPczCjzI2devNBz1zQrb', name: 'BRIAN_v1', description: 'Calm Male' },
+  { id: 'cgSgspJ2msm6clMCkdW9', name: 'JESSICA_v5', description: 'Energetic Female' },
 ];
 
 const TONE_OPTIONS = [
-  { 
-    id: 'professional', 
-    label: 'Professional', 
+  {
+    id: 'professional',
+    label: 'CLINICAL',
     description: 'Formal, efficient, business-like',
     icon: Briefcase,
   },
-  { 
-    id: 'friendly', 
-    label: 'Friendly', 
+  {
+    id: 'friendly',
+    label: 'ADAPTIVE',
     description: 'Warm, conversational, approachable',
     icon: Smile,
   },
-  { 
-    id: 'caring', 
-    label: 'Caring', 
+  {
+    id: 'caring',
+    label: 'EMPATHIC',
     description: 'Empathetic, patient, understanding',
     icon: Heart,
   },
@@ -76,186 +76,166 @@ export function AIPersonalitySettings({
   disabled = false,
 }: AIPersonalitySettingsProps) {
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
-  
+
   const handlePlayVoicePreview = async () => {
-    // Voice preview would be implemented with ElevenLabs TTS API
     setIsPlayingVoice(true);
     setTimeout(() => setIsPlayingVoice(false), 2000);
   };
-  
-  const speedLabel = speed <= 0.85 ? 'Slower' : speed >= 1.15 ? 'Faster' : 'Normal';
-  
+
+  const speedLabel = speed <= 0.85 ? 'DECEL' : speed >= 1.15 ? 'ACCEL' : 'NOMINAL';
+
   return (
-    <div className="glass-card p-6 animate-fade-up">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-          <Volume2 className="h-5 w-5 text-primary" />
+    <div className="bg-[#051a1e] border border-white/10 p-8 shadow-[0_0_50px_rgba(0,0,0,0.3)] animate-fade-up">
+      {/* Module Header */}
+      <div className="flex items-center gap-4 mb-10">
+        <div className="h-10 w-10 border border-primary/20 bg-primary/5 flex items-center justify-center text-primary">
+          <Volume2 className="h-5 w-5" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-foreground">
-            AI Personality & Voice
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            Customize how your AI sounds and behaves
-          </p>
+          <h3 className="text-xs font-mono font-bold text-white uppercase tracking-[0.2em]">Neural Personality Matrix</h3>
+          <p className="text-[9px] font-mono text-muted-foreground uppercase opacity-60 tracking-wider">Configure vocal synthesis and behavioral tone.</p>
         </div>
       </div>
-      
-      <div className="space-y-6">
-        {/* Voice Selection */}
-        <div className="space-y-3">
-          <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-            <Volume2 className="h-3.5 w-3.5" />
-            Voice
-          </label>
-          <div className="flex gap-3">
-            <Select value={voiceId} onValueChange={onVoiceChange} disabled={disabled}>
-              <SelectTrigger className="flex-1 bg-white/5 border-white/10">
-                <SelectValue placeholder="Select a voice" />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+
+        {/* Left Column: Voice & Speed */}
+        <div className="space-y-8">
+          {/* Voice Selection */}
+          <div className="space-y-4">
+            <label className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+              Uplink_Voice_Core
+            </label>
+            <div className="flex gap-4">
+              <Select value={voiceId} onValueChange={onVoiceChange} disabled={disabled}>
+                <SelectTrigger className="flex-1 bg-black/40 border-white/10 rounded-none h-12 font-mono text-xs uppercase tracking-tight">
+                  <SelectValue placeholder="SELECT_CORE" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#051a1e] border-white/10 rounded-none">
+                  {VOICE_OPTIONS.map((voice) => (
+                    <SelectItem key={voice.id} value={voice.id} className="font-mono text-xs uppercase focus:bg-primary/20">
+                      <div className="flex flex-col">
+                        <span className="font-bold">{voice.name}</span>
+                        <span className="text-[9px] opacity-60">{voice.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <button
+                onClick={handlePlayVoicePreview}
+                disabled={disabled || isPlayingVoice}
+                className={cn(
+                  'flex items-center justify-center h-12 w-12 border transition-all duration-300',
+                  'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20',
+                  'disabled:opacity-20'
+                )}
+              >
+                <Play className={cn('h-5 w-5', isPlayingVoice && 'animate-pulse')} />
+              </button>
+            </div>
+          </div>
+
+          {/* Speed Control */}
+          <div className="space-y-4 p-5 bg-black/20 border border-white/5">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest">Synthesis_Velocity</label>
+              <span className={cn(
+                'text-[10px] font-mono font-bold px-2 py-0.5 border',
+                speed === 1 ? 'border-primary/20 text-primary' : 'border-white/10 text-muted-foreground'
+              )}>{speedLabel}</span>
+            </div>
+            <div className="flex items-center gap-6">
+              <span className="text-[9px] font-mono text-muted-foreground opacity-40">0.8X</span>
+              <Slider
+                value={[speed]}
+                onValueChange={([v]) => onSpeedChange(v)}
+                min={0.8}
+                max={1.2}
+                step={0.05}
+                disabled={disabled}
+                className="flex-1"
+              />
+              <span className="text-[9px] font-mono text-muted-foreground opacity-40">1.2X</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Tone & First Message */}
+        <div className="space-y-8">
+          {/* Language Selection */}
+          <div className="space-y-4">
+            <label className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest">Lexicon_Interface</label>
+            <Select value={language} onValueChange={onLanguageChange} disabled={disabled}>
+              <SelectTrigger className="bg-black/40 border-white/10 rounded-none h-12 font-mono text-xs uppercase tracking-tight">
+                <SelectValue placeholder="SELECT_LEXICON" />
               </SelectTrigger>
-              <SelectContent>
-                {VOICE_OPTIONS.map((voice) => (
-                  <SelectItem key={voice.id} value={voice.id}>
-                    <div className="flex flex-col">
-                      <span>{voice.name}</span>
-                      <span className="text-xs text-muted-foreground">{voice.description}</span>
+              <SelectContent className="bg-[#051a1e] border-white/10 rounded-none">
+                {LANGUAGE_OPTIONS.map((lang) => (
+                  <SelectItem key={lang.code} value={lang.code} className="font-mono text-xs focus:bg-primary/20">
+                    <div className="flex items-center gap-3">
+                      <span>{lang.flag}</span>
+                      <span className="uppercase tracking-widest">{lang.name}</span>
                     </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <button
-              onClick={handlePlayVoicePreview}
-              disabled={disabled || isPlayingVoice}
-              className={cn(
-                'flex items-center justify-center h-10 w-10 rounded-xl',
-                'bg-primary/10 border border-primary/30',
-                'text-primary transition-all duration-200',
-                'hover:bg-primary/20 hover:scale-105',
-                'disabled:opacity-50 disabled:cursor-not-allowed'
-              )}
-            >
-              <Play className={cn('h-4 w-4', isPlayingVoice && 'animate-pulse')} />
-            </button>
+          </div>
+
+          {/* Tone Selection */}
+          <div className="space-y-4">
+            <label className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest">Behavioral_Profile</label>
+            <div className="grid grid-cols-3 gap-3">
+              {TONE_OPTIONS.map((option) => {
+                const Icon = option.icon;
+                const isSelected = tone === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    onClick={() => onToneChange(option.id)}
+                    disabled={disabled}
+                    className={cn(
+                      'flex flex-col items-center gap-3 p-4 border transition-all duration-300 relative group overflow-hidden',
+                      isSelected
+                        ? 'bg-primary/10 border-primary/50 text-white'
+                        : 'bg-black/20 border-white/5 text-muted-foreground hover:bg-white/5 hover:border-white/10'
+                    )}
+                  >
+                    <Icon className={cn('h-5 w-5', isSelected ? 'text-primary' : 'opacity-40')} />
+                    <span className="text-[9px] font-mono font-bold uppercase tracking-widest">{option.label}</span>
+                    {isSelected && <div className="absolute bottom-0 left-0 h-[2px] w-full bg-primary" />}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-        
-        {/* Tone Selection */}
-        <div className="space-y-3">
-          <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-            Tone
-          </label>
-          <div className="grid grid-cols-3 gap-3">
-            {TONE_OPTIONS.map((option) => {
-              const Icon = option.icon;
-              const isSelected = tone === option.id;
-              return (
-                <button
-                  key={option.id}
-                  onClick={() => onToneChange(option.id)}
-                  disabled={disabled}
-                  className={cn(
-                    'flex flex-col items-center gap-2 p-4 rounded-xl',
-                    'border transition-all duration-200',
-                    isSelected 
-                      ? 'bg-primary/10 border-primary/50 shadow-[0_0_20px_hsl(43_67%_52%_/_0.15)]' 
-                      : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20',
-                    'disabled:opacity-50 disabled:cursor-not-allowed'
-                  )}
-                >
-                  <Icon className={cn(
-                    'h-5 w-5 transition-colors',
-                    isSelected ? 'text-primary' : 'text-muted-foreground'
-                  )} />
-                  <span className={cn(
-                    'text-sm font-medium transition-colors',
-                    isSelected ? 'text-foreground' : 'text-muted-foreground'
-                  )}>
-                    {option.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-        
-        {/* Language Selection */}
-        <div className="space-y-3">
-          <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-            <Globe className="h-3.5 w-3.5" />
-            Language
-          </label>
-          <Select value={language} onValueChange={onLanguageChange} disabled={disabled}>
-            <SelectTrigger className="bg-white/5 border-white/10">
-              <SelectValue placeholder="Select language" />
-            </SelectTrigger>
-            <SelectContent>
-              {LANGUAGE_OPTIONS.map((lang) => (
-                <SelectItem key={lang.code} value={lang.code}>
-                  <div className="flex items-center gap-2">
-                    <span>{lang.flag}</span>
-                    <span>{lang.name}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        {/* Speed Control */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-              <Gauge className="h-3.5 w-3.5" />
-              Speech Speed
-            </label>
-            <span className={cn(
-              'text-xs font-medium px-2 py-1 rounded-full',
-              speed === 1 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-            )}>
-              {speedLabel}
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-muted-foreground">0.8x</span>
-            <Slider
-              value={[speed]}
-              onValueChange={([v]) => onSpeedChange(v)}
-              min={0.8}
-              max={1.2}
-              step={0.05}
-              disabled={disabled}
-              className="flex-1"
-            />
-            <span className="text-xs text-muted-foreground">1.2x</span>
-          </div>
-        </div>
-        
-        {/* First Message / Greeting */}
-        <div className="space-y-3">
-          <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-            Greeting Message
-          </label>
+
+        {/* Full width First Message */}
+        <div className="md:col-span-2 space-y-4 p-6 bg-primary/5 border border-primary/10 relative">
+          <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-primary/40" />
+          <label className="text-[10px] font-mono font-bold text-primary uppercase tracking-widest block mb-2">System_Greeting_Initialization</label>
           <input
             type="text"
             value={firstMessage}
             onChange={(e) => onFirstMessageChange(e.target.value)}
             disabled={disabled}
-            placeholder="Hello! Thank you for calling. How can I help you today?"
+            placeholder="INITIALIZING_TRANSMISSION..."
             className={cn(
-              'w-full px-4 py-3 rounded-xl',
-              'bg-white/5 border border-white/10',
-              'text-foreground placeholder:text-muted-foreground/50',
-              'focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30',
-              'transition-all duration-200',
-              'disabled:opacity-50 disabled:cursor-not-allowed'
+              'w-full bg-black/40 border border-white/10 rounded-none px-4 py-4',
+              'text-xs font-mono text-white placeholder:opacity-20 uppercase tracking-tight',
+              'focus:outline-none focus:border-primary/50 transition-colors'
             )}
           />
-          <p className="text-xs text-muted-foreground/70">
-            This is the first thing your AI says when answering a call.
-          </p>
+          <div className="flex items-center gap-2 mt-2 opacity-40">
+            <Zap className="h-3 w-3 text-primary" />
+            <p className="text-[8px] font-mono text-muted-foreground uppercase tracking-widest">
+              Primary trigger message executed on terminal connection.
+            </p>
+          </div>
         </div>
+
       </div>
     </div>
   );

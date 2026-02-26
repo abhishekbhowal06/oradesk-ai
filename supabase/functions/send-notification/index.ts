@@ -1,7 +1,12 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { verifyAuthToken, verifyClinicMembership } from "../_shared/auth.ts";
-import { NotificationRequestSchema, validateInput, sanitizeString, type ValidatedNotificationRequest } from "../_shared/validation.ts";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { verifyAuthToken, verifyClinicMembership } from '../_shared/auth.ts';
+import {
+  NotificationRequestSchema,
+  validateInput,
+  sanitizeString,
+  type ValidatedNotificationRequest,
+} from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -54,14 +59,14 @@ serve(async (req) => {
     if (type === 'email' && !settings.email_enabled) {
       return new Response(
         JSON.stringify({ success: false, reason: 'Email notifications disabled for this clinic' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
     if (type === 'sms' && !settings.sms_enabled) {
       return new Response(
         JSON.stringify({ success: false, reason: 'SMS notifications disabled for this clinic' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -77,7 +82,7 @@ serve(async (req) => {
       }
 
       const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
-      
+
       const formData = new URLSearchParams();
       formData.append('To', data.to);
       formData.append('From', TWILIO_PHONE_NUMBER);
@@ -86,7 +91,7 @@ serve(async (req) => {
       const response = await fetch(twilioUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`,
+          Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formData,
@@ -107,13 +112,15 @@ serve(async (req) => {
       const emailResponse = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${RESEND_API_KEY}`,
+          Authorization: `Bearer ${RESEND_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           from: `${sanitizeString(clinic.name)} <noreply@dentacor.com>`,
           to: [data.to],
-          subject: data.subject ? sanitizeString(data.subject) : 'Notification from your dental clinic',
+          subject: data.subject
+            ? sanitizeString(data.subject)
+            : 'Notification from your dental clinic',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h2 style="color: #1a365d;">${sanitizeString(clinic.name)}</h2>
@@ -151,19 +158,19 @@ serve(async (req) => {
       },
     });
 
-    return new Response(
-      JSON.stringify(result),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error sending notification:', error);
-    
+
     const message = error instanceof Error ? error.message : 'Unknown error';
-    const status = message.includes('Unauthorized') || message.includes('Not authorized') ? 401 : 500;
-    
-    return new Response(
-      JSON.stringify({ success: false, error: message }),
-      { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    const status =
+      message.includes('Unauthorized') || message.includes('Not authorized') ? 401 : 500;
+
+    return new Response(JSON.stringify({ success: false, error: message }), {
+      status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });

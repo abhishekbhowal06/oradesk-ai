@@ -15,7 +15,7 @@ export async function verifyAuthToken(req: Request): Promise<{ userId: string; e
   const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    global: { headers: { Authorization: authHeader } }
+    global: { headers: { Authorization: authHeader } },
   });
 
   const { data, error } = await supabase.auth.getClaims(token);
@@ -34,10 +34,10 @@ export async function verifyAuthToken(req: Request): Promise<{ userId: string; e
  * Throws an error if the user is not a member.
  */
 export async function verifyClinicMembership(
-  userId: string, 
+  userId: string,
   clinicId: string,
   supabaseUrl: string,
-  serviceRoleKey: string
+  serviceRoleKey: string,
 ): Promise<{ role: string }> {
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
@@ -64,13 +64,13 @@ export function validateTwilioWebhook(req: Request, authToken: string, url: stri
   // Note: For production, implement full signature validation using Twilio's algorithm
   // This is a basic check - the request must come from Twilio
   const twilioSignature = req.headers.get('X-Twilio-Signature');
-  
+
   // If no signature header is present, this is not a Twilio webhook
   // For internal calls (cron jobs), we skip this validation
   if (!twilioSignature) {
     return false;
   }
-  
+
   // For MVP: Accept requests with Twilio signature header
   // Production: Implement full HMAC validation per Twilio docs
   return true;
